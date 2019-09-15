@@ -372,10 +372,10 @@ void imageDirExplorer::imageChange()
 		if( stringEnds(str_imgName, _ImageExtProblematic, true ) ){	//image is Problematic, convert
 			size_t posExtBeg= str_imgName.find_last_of( L'.' );
 			std::wstring problematicFormat_ext= str_imgName.substr( posExtBeg );
+
 			str_path+= L".JPG";
 			DeleteFileW( L".JPG" );
 			CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), true );
-
 			std::wstring temp_exe_exe( _OwnPath );
 			 temp_exe_exe+= _ImageConverter_exe;
 			std::wstring temp_argStr( problematicFormat_ext+ L" .JPG " );
@@ -395,6 +395,7 @@ void imageDirExplorer::imageChange()
 				if( exists_Wfile( L".jpg" ) ) break;
 				Sleep(100); ++waitedFor;
 			}
+			Sleep(50);
 			DeleteFileW( problematicFormat_ext.c_str() );
 		} else {
 			str_path+= str_imgName;	//image is ok = not .PNG
