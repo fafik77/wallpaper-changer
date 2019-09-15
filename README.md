@@ -4,6 +4,7 @@ Changes your Windows Wallpaper<br>
 Supports UTF-8 fileNames<br>
 Can be configured as you desire<br>
 Renders .PNG to jpeg beffore unsuccessfully setting PNG as wallpaper(the wallpaper looks exactly like PNG in image browser)<br>
+# see BGchanger.cfg for options
 
 
 src is available<br>
