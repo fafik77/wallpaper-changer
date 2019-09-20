@@ -1,9 +1,11 @@
 #include "fileFinder.h"
 
-thread_local std::mt19937 gen{std::random_device{}()};
+std::random_device dev;
+std::mt19937 rng( time(0) );
+//thread_local std::mt19937 gen{std::random_device{}()};
 template<typename T>
 T random(T min, T max) {
-	return std::uniform_int_distribution<T>{min, max}(gen);
+	return std::uniform_int_distribution<T>{min, max}(rng);
 }
 
 
