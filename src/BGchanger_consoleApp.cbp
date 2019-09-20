@@ -56,6 +56,12 @@
 		<Unit filename="main.cpp" />
 		<Unit filename="resources.rc">
 			<Option compilerVar="WINDRES" />
+			<Option target="Debug" />
+			<Option target="Release Cmd" />
+		</Unit>
+		<Unit filename="resourcesGui.rc">
+			<Option compilerVar="WINDRES" />
+			<Option target="Release GUI" />
 		</Unit>
 		<Extensions>
 			<code_completion />

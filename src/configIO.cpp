@@ -150,13 +150,13 @@ bool configFile::GenerateNew(const std::string& file)
 	cfgFstr.open( file );
 	if( !cfgFstr.is_open() ) return false;
 	std::string temp_str="\
- @randomize show sequence (best NOT to use `sort=1` with it), 1=random no repeat, 2=with repeat\n\
+ @randomize show sequence, 1=random no repeat(requires `saveLastImages=1`), 2=with repeat\n\
 random=0\n\
  @sort files, sorted CaseInsensitive alphabetically\n\
 sort=1\n\
  @sort numbers, numerically\n\
 sortDigitsAsNumbers=1\n\
- @1= sort dir content by filenames, 0= sort by full path\n\
+ @sort dir content: 1= by filenames, 0= by full path\n\
 DirSortByFileName=1\n\
 \n\
  @image folder\n\
@@ -168,7 +168,7 @@ skipFoldersBeginning=old\n\
  @dont show content of Hidden folders\n\
 skipHiddenFolders=1\n\
 \n\
- @converts .PNG to jpeg with BG Colour as set RGB( R, G, B ) or enter\"Background\" to get BGColour automatic\n\
+ @converts .PNG to jpeg with BG Colour as set RGB( R, G, B ) or enter\"Background\" to get BGColour automatic from HKCU->Background Colour\n\
 BG_Colour_RGB=Background\n\
  @system time instead of internal timer\n\
 useSystemTime=1\n\

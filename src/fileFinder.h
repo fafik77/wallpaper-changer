@@ -27,13 +27,15 @@ struct DirFileEnt{
 	std::wstring getName(bool afterNumber=true)const;
 		///return path+name
 	std::wstring getPathName(bool afterNumber=false)const;
+
 };
 
 	///vector(DirFileEnt)
 typedef std::vector<DirFileEnt> vectorDF_entry;
 
 	///vector pointers(DirFileEnt)
-class vector_DFp: public std::vector<vectorDF_entry::iterator>
+//class vector_DFp: public std::vector<vectorDF_entry::iterator>
+class vector_DFp: public std::vector<DirFileEnt*>
 {
  public:
 
@@ -41,12 +43,13 @@ class vector_DFp: public std::vector<vectorDF_entry::iterator>
  	void del_back();
 		///will call del_front, or del_back, or ::erase
  	void delEl( size_t pos );
- 	vectorDF_entry::iterator at_pos( size_t pos );
+ 	iterator at_pos( size_t pos );
  	size_t get_size() const;
  	void clear(){
 		_M_erase_at_end(this->_M_impl._M_start);
 		_pos_begin= 0;
  	}
+ 	iterator begin_f(){ return begin()+ _pos_begin; }
  protected:
 	size_t _pos_begin= 0;
 };
@@ -59,7 +62,7 @@ bool exists_Wfile(LPCWSTR szPath);
 bool isDigits( wchar_t char_1, wchar_t char_2 );
 	///@return char amount moved, -1 on error
 size_t getDigitsAsNumber( const std::wstring& string1, const std::wstring& string2, long long* out_LL );
-int compare_paths(const DirFileEnt* DE_a, const DirFileEnt* DE_b );
+bool compare_paths_bool(const DirFileEnt* DE_a, const DirFileEnt* DE_b );
 
 	///@return 0 no, 1 true
 bool stringEnds(const std::string& stringIn, const std::string& ends, bool CaseInsensit=true, std::string* rest=nullptr );
@@ -113,12 +116,14 @@ class imageDirExplorer{
 	BYTE WaitTime();
 	void imageChange();
 	void SavedList_read();
+	bool SavedList_getCurrentWP( const std::string& fileName );
+
 		///returns pos in vector or -1 when npos
-	size_t sellectImgInList( const std::wstring& strImagePath, bool revers=false );
+	size_t ImgInList_find( const std::wstring& strImagePath );
 	void SavedList_add();
 	std::wstring lastItemName;
 
-	size_t writeUtfLine( const std::wstring& strWrite, const std::string& file_out );
+	size_t writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride="a+" );
 
 	class readUtfFile{
 	 public:
@@ -142,7 +147,7 @@ class imageDirExplorer{
 		///used for `config.random=1`
 	size_t image_i= 0;
 		///used for `config.random=1` to determine if 1st image was shown
-	bool image_1Shown= 0;
+	BYTE image_1Shown= 0;
 	DirFileEnt* image_p= nullptr;
 };
 

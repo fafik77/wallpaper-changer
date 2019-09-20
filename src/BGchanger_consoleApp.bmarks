@@ -1,34 +1,32 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <BrowseTracker_layout_file>
 	<ActiveTarget name="Release Cmd" />
+	<File name="configIO.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="2712" topLine="73" />
+		<BrowseMarks positions="" />
+		<Book_Marks positions="" />
+	</File>
 	<File name="fileFinder.h" open="1" top="0" tabpos="2">
-		<Cursor position="229" topLine="0" />
+		<Cursor position="2998" topLine="78" />
 		<BrowseMarks positions="" />
 		<Book_Marks positions="" />
 	</File>
 	<File name="main.cpp" open="1" top="1" tabpos="1">
-		<Cursor position="44" topLine="0" />
+		<Cursor position="3096" topLine="74" />
 		<BrowseMarks positions="" />
 		<Book_Marks positions="" />
 	</File>
 	<File name="configIO.h" open="1" top="0" tabpos="4">
-		<Cursor position="596" topLine="0" />
-		<BrowseMarks positions="" />
-		<Book_Marks positions="" />
+		<Cursor position="606" topLine="21" />
 	</File>
 	<File name="fileFinder.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="10185" topLine="294" />
+		<Cursor position="5102" topLine="157" />
 		<BrowseMarks positions="" />
-		<Book_Marks positions="6078,6078,6078,12365,12421,12455,12547" />
+		<Book_Marks positions="6078,6078,6078,12365,12421,12455,12547,1561,1561,3227,3227" />
 	</File>
-	<File name="resources.rc" open="1" top="0" tabpos="6">
-		<Cursor position="33" topLine="0" />
-		<BrowseMarks positions="" />
-		<Book_Marks positions="" />
-	</File>
-	<File name="configIO.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="1448" topLine="43" />
-		<BrowseMarks positions="" />
+	<File name="resources.rc" open="0" top="0" tabpos="6">
+		<Cursor position="105" topLine="0" />
+		<BrowseMarks positions="0" />
 		<Book_Marks positions="" />
 	</File>
 </BrowseTracker_layout_file>

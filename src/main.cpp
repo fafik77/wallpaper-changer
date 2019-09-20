@@ -41,6 +41,7 @@ void useCmdArgs(int argc, char* argv[], configArgsContent& item)
 			status_next|= 2;
 		} else if( arg_key== "/?" || arg_key== "/h" || arg_key== "/help" ){
 			printf("\
+  Version 1.3\ton 2019.09.20\n\
 Showing Help\n\
 === Arguments ===\n\
   /cd path\t change path that program starts in. OR '~'for self path\n\

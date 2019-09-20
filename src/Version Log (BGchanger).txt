@@ -1,0 +1,16 @@
+BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
+
+
+v1.3	2019.09.20
+	BGchanger released
+	fixed problems with config.random
+
+v1.2	2019.09.20
+	config.random got upgraded
+	sort and find algorithms were rewritten to use binary search instead of linear one (means its faster)
+
+v1.1	2019.09
+	config.random got support
+
+v1.0	2019.09
+	1st working version, (without working config.random)
