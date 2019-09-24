@@ -2,11 +2,9 @@
 #define FILEFINDER_H
 
 
-#include <algorithm> // transform
 #include <ctime>	// time
 
 #include <stdlib.h>	// qsort
-//#include <cstdio>	// printf
 #include "configIO.h"
 #include <direct.h>	//cwd set, get
 
@@ -34,12 +32,11 @@ struct DirFileEnt{
 typedef std::vector<DirFileEnt> vectorDF_entry;
 
 	///vector pointers(DirFileEnt)
-//class vector_DFp: public std::vector<vectorDF_entry::iterator>
 class vector_DFp: public std::vector<DirFileEnt*>
 {
  public:
 
- 	void del_front();
+ 	void del_front(size_t amount= 1);
  	void del_back();
 		///will call del_front, or del_back, or ::erase
  	void delEl( size_t pos );
@@ -53,7 +50,23 @@ class vector_DFp: public std::vector<DirFileEnt*>
  protected:
 	size_t _pos_begin= 0;
 };
+struct timeToTime
+{
+	int hour= 0;
+	int min= 0;
+	int sec= 0;
+	int days= 0;
 
+	timeToTime(time_t time_in, bool fillIfZero=false){
+		days= time_in/ 86400;
+		time_in= time_in% 86400;
+		hour= time_in/ 3600;
+		time_in= time_in% 3600;
+		min= time_in/ 60;
+		time_in= time_in% 60;
+		sec= time_in;
+	}
+};
 
 bool exists_file(const std::string& name);
 bool exists_Wfile(LPCWSTR szPath);
@@ -75,14 +88,13 @@ bool stringEnds(const std::wstring& stringIn, const std::string& ends, bool Case
 bool stringEnds(const std::wstring& stringIn, const vectorString& ends, bool CaseInsensit=true, std::wstring* rest=nullptr );
 
 
-	///@return 0 no, 1 true
-bool stringBegins(const std::string& stringIn, const std::string& begins, bool CaseInsensit=true, std::string* rest=nullptr );
-bool stringBegins(const std::wstring& stringIn, const std::wstring& begins, bool CaseInsensit=true, std::wstring* rest=nullptr );
-const time_t dhms_time= (60*60*24);
-
-
 class imageDirExplorer{
  public:
+ 	imageDirExplorer(){
+		cwd_update();
+ 	}
+ 	void cwd_update(){ cwd_my= _wgetcwd( NULL, FILENAME_MAX*2 ); }
+
  	configFile mainConfig;
  	configArgsContent ArgsConfig;
  	vectorDF_entry DF_list;
@@ -91,7 +103,6 @@ class imageDirExplorer{
 	std::wstring _ImageConverter_exe;
 	std::wstring _ImageConverter_args;
 	std::wstring _OwnPath;
-	vectorString _ImageExtProblematic;
 
 		///@return 0 no error, 1 error
 	BYTE getImagesFromDir(){
@@ -103,18 +114,24 @@ class imageDirExplorer{
 	}
 
 	void sortBy();
-	void iterateImages();
 	void showImageList();
+	void showFullImageList();
+	void imageChange();
+	bool imageChangeTo(std::wstring imgName);
+		///new 2019-09-23
+	BYTE WaitUntilTime();
 
 		///all the things that need to be done to run it.
-	void prepStart();
+	void prepStart( bool LoadShownImg=true );
+	void rescan();
 	void SavedList_remove();
 
  protected:
+ 	std::wstring cwd_my;
 		///@return 0 no error, 1 error
 	BYTE getImagesFromDir(const std::wstring& addPath , vectorDF_entry& out_vector);
-	BYTE WaitTime();
-	void imageChange();
+	std::time_t ttime_pulse= 0;
+
 	void SavedList_read();
 	bool SavedList_getCurrentWP( const std::string& fileName );
 
@@ -122,27 +139,11 @@ class imageDirExplorer{
 	size_t ImgInList_find( const std::wstring& strImagePath );
 	void SavedList_add();
 	std::wstring lastItemName;
+		///will remove file after 1 Sleep
+	std::wstring problematicFormat_ext;
 
 	size_t writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride="a+" );
 
-	class readUtfFile{
-	 public:
-		readUtfFile();
-		~readUtfFile();
-
-		size_t readLine( std::wstring& out_Line );
-			///1 ok, 0 fail
-		bool Open(const std::string& open_file= "BGchanger_List.cfg");
-			///@return close error code
-		int Close();
-	 protected:
-		size_t ReadOnce_size= 4096;
-		std::wstring ReadOnce_left;
-		FILE* io_file= nullptr;
-
-			///appends string
-		size_t readTo( std::wstring& out_read );
-	};
 
 		///used for `config.random=1`
 	size_t image_i= 0;

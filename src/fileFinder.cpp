@@ -1,8 +1,7 @@
 #include "fileFinder.h"
 
 std::random_device dev;
-std::mt19937 rng( time(0) );
-//thread_local std::mt19937 gen{std::random_device{}()};
+std::mt19937 rng( time(0) );	//thread_local std::mt19937 gen{std::random_device{}()};
 template<typename T>
 T random(T min, T max) {
 	return std::uniform_int_distribution<T>{min, max}(rng);
@@ -11,9 +10,9 @@ T random(T min, T max) {
 
 configFileContent* publifiedConfig= nullptr;
 
-void vector_DFp::del_front()
+void vector_DFp::del_front(size_t amount)
 {
-	++_pos_begin;
+	_pos_begin+= amount;
 }
 void vector_DFp::del_back()
 {
@@ -70,11 +69,9 @@ return -1;
 
 bool compare_paths_bool(const DirFileEnt* DE_a, const DirFileEnt* DE_b )
 {
-	bool option_nameOnly= publifiedConfig->DirSortByFileName;
-	bool option_asNumbers= publifiedConfig->sortDigitsAsNumbers;
 	std::wstring str_a, str_b;
 
-	if(option_nameOnly){
+	if(publifiedConfig->DirSortByFileName){
 		str_a= DE_a->getName(0);
 		str_b= DE_b->getName(0);
 	} else {
@@ -91,7 +88,7 @@ bool compare_paths_bool(const DirFileEnt* DE_a, const DirFileEnt* DE_b )
 		wchar_t c_a= std::toupper(str_a.at(PosCurr));
 		wchar_t c_b= std::toupper(str_b.at(PosCurr));
 
-		if( option_asNumbers ){
+		if( publifiedConfig->sortDigitsAsNumbers ){
 		  BYTE isDigits_for= isDigits( c_a ) | (2*isDigits( c_b ));
 		  if( isDigits_for ){
 			if( isDigits_for == 3 ){
@@ -174,43 +171,39 @@ bool stringEnds(const std::wstring& stringIn, const vectorString& ends, bool Cas
 }
 
 
-bool stringBegins(const std::string& stringIn, const std::string& begins, bool CaseInsensit, std::string* rest )
+bool imageDirExplorer::imageChangeTo(std::wstring imgName)
 {
-	if( !begins.length() ) return true;
-	std::string begins_w(begins);
-	size_t findLen= begins_w.length();
-
-	if( stringIn.length()< findLen ) return false;
-
-	std::string firstPart= stringIn.substr( 0, findLen );
-	if(CaseInsensit){
-		std::transform(firstPart.begin(), firstPart.end(), firstPart.begin(), ::toupper);
-		std::transform(begins_w.begin(), begins_w.end(), begins_w.begin(), ::toupper);
+	std::wstring restPath;
+	std::wstring pathBegins(cwd_my);
+	std::wstring pathGoesBack(mainConfig.cfg_content.imageFolder.begin(), mainConfig.cfg_content.imageFolder.end());
+	while( stringBegins(pathGoesBack, L"..", false) ){
+		pathGoesBack.erase(0,3);
+		pathBegins= pathBegins.substr( 0, pathBegins.find_last_of( L'\\' ) );
 	}
-	if(rest){
-		(*rest)= stringIn.substr( findLen );
+	pathBegins+= pathBegins.back()==L'\\'? L"" : L"\\";
+	pathBegins+= pathGoesBack;
+	pathBegins+= pathBegins.back()==L'\\'? L"" : L"\\";
+
+	if( stringBegins( imgName, pathBegins, true, &restPath ) ){
+		size_t valEl= ImgInList_find( restPath );
+		if( valEl==imgName.npos && ArgsConfig.forcedImageChoosing){
+			prepStart( false );
+			valEl= ImgInList_find( restPath );
+			SavedList_read();
+		}
+		if( valEl!= imgName.npos ){
+			image_i= valEl;
+			image_p= *DF_list_p.at_pos(valEl);
+			if(!mainConfig.cfg_content.random){
+				DF_list_p.del_front(valEl);
+			}
+			image_1Shown= 1;	//enforce imageChange() to show currently selected element
+			imageChange();
+			DF_list_p.delEl(valEl);
+		}
 	}
-	return ( firstPart == begins_w );
+return 0;
 }
-bool stringBegins(const std::wstring& stringIn, const std::wstring& begins, bool CaseInsensit, std::wstring* rest )
-{
-	if( !begins.length() ) return true;
-	std::wstring begins_w(begins);
-	size_t findLen= begins_w.length();
-
-	if( stringIn.length()< findLen ) return false;
-
-	std::wstring firstPart= stringIn.substr( 0, findLen );
-	if(CaseInsensit){
-		std::transform(firstPart.begin(), firstPart.end(), firstPart.begin(), ::toupper);
-		std::transform(begins_w.begin(), begins_w.end(), begins_w.begin(), ::toupper);
-	}
-	if(rest){
-		(*rest)= stringIn.substr( findLen );
-	}
-	return ( firstPart == begins_w );
-}
-
 
 BYTE imageDirExplorer::getImagesFromDir(const std::wstring& addPath, vectorDF_entry& out_vector)
 {
@@ -252,7 +245,8 @@ BYTE imageDirExplorer::getImagesFromDir(const std::wstring& addPath, vectorDF_en
 			if( data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ){
 				if( mainConfig.cfg_content.skipHiddenFolders && data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN ){
 				} else {
-					if( !stringBegins(curr_Name, std::wstring(mainConfig.cfg_content.skipFoldersBeginning.begin(), mainConfig.cfg_content.skipFoldersBeginning.end()), true) )
+					if( !stringBegins(curr_Name, std::wstring(mainConfig.cfg_content.skipFoldersBeginning.begin(), mainConfig.cfg_content.skipFoldersBeginning.end()), true)
+						&& !stringEnds(curr_Name, mainConfig.cfg_content.skipFoldersEnding, true ) )
 						getImagesFromDir( (addPath.empty()? L"" : addPath+L"\\") +curr_Name, out_vector );
 				}
 			} else {
@@ -284,57 +278,82 @@ void imageDirExplorer::sortBy()
 }
 void imageDirExplorer::showImageList()
 {
-	remove( ArgsConfig.showLogTo.c_str() );
 	if( mainConfig.cfg_content.random )
 		printf("config.random is set to= %u.\n", mainConfig.cfg_content.random);
 	printf("images order= [\n");
+	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= [", ArgsConfig.showLogTo );
 	for( size_t temp_u=0; temp_u<DF_list_p.get_size(); ++temp_u ){
-		writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
+		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
 		wprintf( L" %s\n", (*DF_list_p.at_pos(temp_u))->getPathName(false).c_str() );
 	}
-	printf("]end\n");
+	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
+	printf("] end. image order\n");
 }
-void imageDirExplorer::iterateImages()
+void imageDirExplorer::showFullImageList()
 {
-	while(true)
-	{
-		imageChange();
-
-		WaitTime();
+	vector_DFp DF_list_tempP;
+	DF_list_tempP.reserve( DF_list.size()+1 );
+	for( auto on_it= DF_list.begin(); on_it!= DF_list.end(); ++on_it ){
+		DF_list_tempP.push_back( &*on_it );
 	}
-}
 
-BYTE imageDirExplorer::WaitTime()
+	if( mainConfig.cfg_content.random )
+		printf("config.random is set to= %u.\n", mainConfig.cfg_content.random);
+	printf("images order= [\n");
+	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= [", ArgsConfig.showLogTo );
+	for( size_t temp_u=0; temp_u<DF_list_tempP.get_size(); ++temp_u ){
+		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_tempP.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
+		wprintf( L" %s\n", (*DF_list_tempP.at_pos(temp_u))->getPathName(false).c_str() );
+	}
+	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
+	printf("] end. image order\n");
+}
+BYTE imageDirExplorer::WaitUntilTime()
 {
 		///get time now
 	std::time_t ttime_now= std::time(0);
-	std::time_t ttime_pulse= ttime_now+ time_t(mainConfig.cfg_content.time);
-	if(mainConfig.cfg_content.useSystemTime){
-		ttime_now-= (ttime_now% 60);	//remove sec
-		ttime_pulse= ttime_now- (ttime_now% dhms_time)% time_t(mainConfig.cfg_content.time);
-		ttime_pulse+= time_t(mainConfig.cfg_content.time);
+
+	if(!ttime_pulse){
+		std::time_t ttime_every(mainConfig.cfg_content.time);
+		ttime_pulse= ttime_now+ ttime_every;
+
+		if(mainConfig.cfg_content.useSystemTime){
+			ttime_pulse= ttime_now;
+			timeToTime time_every( ttime_every );
+			std::tm* time_point= std::localtime( &ttime_now );
+
+			if(time_every.hour) ttime_pulse-= (time_point->tm_hour % time_every.hour)* 3600;
+			if(time_every.min)  ttime_pulse-= (time_point->tm_min % time_every.min)* 60;
+			else ttime_pulse-= time_point->tm_min* 60;
+
+			ttime_pulse-= time_point->tm_sec;
+			ttime_pulse+= ttime_every;
+		}
+		std::tm* time_now= std::localtime( &ttime_pulse );
+		printf("next change: %ih:", time_now->tm_hour );
+		printf("%im .", time_now->tm_min );
+		printf("%i\n", time_now->tm_sec );
+	} else if( ttime_now>= ttime_pulse ){
+		if(mainConfig.cfg_content.readjustTimeAfterSleep){
+			if( ttime_now> (ttime_pulse+ time_t(10) ) ){
+				ttime_pulse= 0;
+				printf("readjusting Time...\n");
+				return WaitUntilTime();
+			}
+		}
+		ttime_pulse= 0;
+		imageChange();
 	}
 
-std::tm* time_now= std::localtime( &ttime_pulse );
-printf("next change: %ih:", time_now->tm_hour );
-printf("%im .", time_now->tm_min );
-printf("%i\n", time_now->tm_sec );
-
-	while( ttime_now< ttime_pulse )	//compensate for sleep Lag moving it out of sync
-	{
-		if( exists_file("BGchangerNext.cfg") ){	//check if file exists
-			remove("BGchangerNext.cfg");
-			printf("# /next requested. changes image now!\n");
-			return 1;
-		}
-		Sleep(2000);
-		ttime_now= std::time(0);
+	if( problematicFormat_ext.size() ){
+		DeleteFileW( problematicFormat_ext.c_str() );
+		problematicFormat_ext.clear();
 	}
 return 0;
 }
 void imageDirExplorer::imageChange()
 {
-	if(image_p){	//old image
+	if(image_p && image_1Shown>1){	//old image
 		image_p->selected= 2;
 		SavedList_add();
 	}
@@ -348,7 +367,8 @@ void imageDirExplorer::imageChange()
 	if( !image_1Shown ){
 		image_1Shown= true;
 		if( SavedList_getCurrentWP( "BGchanger_selected.cfg" ) ){
-//			return;
+			//find the image and delete it from list..
+			//..again show this image
 		} else {
 			image_1Shown= 2;
 		}
@@ -377,19 +397,20 @@ void imageDirExplorer::imageChange()
 	wprintf( L" %s\n", str_imgName.c_str() );
 
 	if( exists_Wfile( str_imgName.c_str() ) ){
-		std::string	temp_cwd;
-		temp_cwd= getcwd( NULL, FILENAME_MAX*2 );
 		std::wstring str_path;
-		if( mainConfig.cfg_content.imageFolder.find(':')== temp_cwd.npos ){
-			str_path+= std::wstring(temp_cwd.begin(), temp_cwd.end())+ L"\\";
+		if( mainConfig.cfg_content.imageFolder.find(':')== str_path.npos ){
+			str_path+= cwd_my+ L"\\";
 		}
-		if( stringEnds(str_imgName, _ImageExtProblematic, true ) ){	//image is Problematic, convert
+		if( stringEnds(str_imgName, mainConfig.cfg_content._ImageExtProblematic, true ) ){	//image is Problematic, convert
 			size_t posExtBeg= str_imgName.find_last_of( L'.' );
-			std::wstring problematicFormat_ext= str_imgName.substr( posExtBeg );
+			problematicFormat_ext= str_imgName.substr( posExtBeg );
 
 			str_path+= L".JPG";
-			DeleteFileW( L".JPG" );
-			CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), true );
+			remove( std::string( problematicFormat_ext.begin(), problematicFormat_ext.end() ).c_str() );
+			remove( ".JPG" );
+			Sleep(100);	//give NTFS some time to index that such file no longer exists
+			//DeleteFileW( str_imgName.c_str() );		//does not work at ALLLLLLLL
+			CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), false );	//fusking winApi never shows what arguments do
 			std::wstring temp_exe_exe( _OwnPath );
 			 temp_exe_exe+= _ImageConverter_exe;
 			std::wstring temp_argStr( problematicFormat_ext+ L" .JPG " );
@@ -409,8 +430,12 @@ void imageDirExplorer::imageChange()
 				if( exists_Wfile( L".jpg" ) ) break;
 				Sleep(100); ++waitedFor;
 			}
-			Sleep(50);
-			DeleteFileW( problematicFormat_ext.c_str() );
+			if(waitedFor>= 15){
+				std::wstring temp_errMsg( L"! Error ! could not convert image from " );
+				temp_errMsg+= problematicFormat_ext + L" to .jpeg\n";
+				wprintf( temp_errMsg.c_str() );
+				if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
+			}
 		} else {
 			str_path+= str_imgName;	//image is ok = not .PNG
 		}
@@ -462,11 +487,13 @@ void imageDirExplorer::imageChange()
 	}
 
 }
-void imageDirExplorer::prepStart()
+void imageDirExplorer::prepStart( bool LoadShownImg )
 {
 	getImagesFromDir();
 	if(DF_list.empty() ){
 		printf("!!! !Error! nothing to work with.\n");
+		if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"!!! !Error! nothing to work with", ArgsConfig.showLogTo );
+		PostQuitMessage(404);
 		exit(404);
 	}
 
@@ -476,7 +503,12 @@ void imageDirExplorer::prepStart()
 	}
 
 	sortBy();
-	SavedList_read();
+	if(LoadShownImg) SavedList_read();
+}
+void imageDirExplorer::rescan()
+{
+	prepStart();
+	SavedList_getCurrentWP( "BGchanger_selected.cfg" );
 }
 void imageDirExplorer::SavedList_remove()
 {
@@ -515,6 +547,7 @@ bool imageDirExplorer::SavedList_getCurrentWP( const std::string& fileName )
 				if( valDelEl!= Line.npos ){
 					image_i= valDelEl;
 					image_p= *DF_list_p.at_pos( valDelEl );
+					DF_list_p.delEl( valDelEl );
 					retVal= true;
 					break;
 				}
@@ -539,7 +572,10 @@ size_t imageDirExplorer::ImgInList_find( const std::wstring& strImagePath )
 	if( thatIt!= DF_list_p.end() && (*thatIt)->getPathName()== temp_findEnt.getPathName() ){
 		return thatIt- DF_list_p.begin_f();
 	} else {
-		wprintf( L"List has non existing: \"%s\"\n", strImagePath.c_str() );
+		std::wstring temp_errMsg( L"List has non existing: \"" );
+		temp_errMsg+= strImagePath+ L"\"\n";
+		wprintf( (temp_errMsg+ L"\n").c_str() );
+		if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
 		return -1;
 	}
 
@@ -568,78 +604,6 @@ size_t imageDirExplorer::writeUtfLine( const std::wstring& strWrite, const std::
 return retVal;
 }
 
-imageDirExplorer::readUtfFile::readUtfFile()
-{
-}
-imageDirExplorer::readUtfFile::~readUtfFile()
-{
-	Close();
-}
-int imageDirExplorer::readUtfFile::Close()
-{
-	int retVal= 0;
-	if(io_file){
-		fclose(io_file);
-		io_file= nullptr;
-	}
-return retVal;
-}
-bool imageDirExplorer::readUtfFile::Open(const std::string& open_file)
-{
-	io_file= fopen( open_file.c_str(), "r,ccs=UTF-8" );
-return io_file;
-}
-
-size_t imageDirExplorer::readUtfFile::readTo( std::wstring& out_read )
-{
-	std::wstring temp_str;
-	temp_str.resize( ReadOnce_size, 0 );
-
-		///(taken from wiki) size_t readSize= fread( &temp_str.at(0) , wcslen(temp_str.c_str()) * sizeof(wchar_t), 1, io_file );
-	size_t readSize= fread( &temp_str.at(0) , sizeof(wchar_t), ReadOnce_size, io_file );
-
-	out_read.append( temp_str.substr(0, readSize) ) ;
-	return readSize;
-}
-size_t imageDirExplorer::readUtfFile::readLine( std::wstring& out_Line )
-{
-	std::wstring* temp_str;
-	std::wstring out_str;
-	size_t readSize= 0;
-	bool madeNew= false;
-
-	if( ReadOnce_left.size() ){
-		temp_str= &ReadOnce_left;
-		readSize= temp_str->length();
-	} else {
-		temp_str= new std::wstring();
-		madeNew= true;
-		readSize= readTo( *temp_str );
-	}
-
-	while(true)
-	{
-		if(readSize && readSize!=std::wstring::npos){
-			size_t newline= temp_str->find( L'\n' );
-			if( newline!= temp_str->npos )
-			{	//ok done
-				out_str.append( temp_str->substr(0, newline ) );
-				ReadOnce_left= temp_str->substr( newline+1 );
-				break;
-			} else {	//repeat
-				readSize+= readTo( *temp_str );
-			}
-		} else {
-			break;
-		}
-	}
-
-	out_Line= out_str;
-	if(madeNew){	//cleanup
-		delete temp_str;
-	}
-return readSize;
-}
 
 bool exists_file(const std::string& name)
 {
@@ -652,10 +616,10 @@ bool exists_file(const std::string& name)
 }
 bool exists_Wfile(LPCWSTR szPath)
 {
-  DWORD dwAttrib = GetFileAttributesW(szPath);
+  DWORD dwAttrib= GetFileAttributesW(szPath);
 
-  return (dwAttrib != INVALID_FILE_ATTRIBUTES &&
-         !(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+	return(dwAttrib != INVALID_FILE_ATTRIBUTES &&
+		!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
 }
 
 
