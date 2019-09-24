@@ -1,0 +1,34 @@
+BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
+
+
+v1.4	2019.09.24	maybe the final Version
+	new:
+		running program can be talked with, using program CMD arguments
+		argument[1]	if not a switch ImageFileName is assumed to show now
+		`config.skipFoldersBeginning` has a counter part `config.skipFoldersEnding`
+	now:
+		program can have one running instance and aditional run can alter its CMD arguments.
+		/next calls a new instance asking the 1st one to show Next image
+		wait loop is realized with WinApi Timer
+		wait loop can detect if PC was put into sleep and ajust itself
+		images in queue can be altered when program is already running
+		exported some hardBound options into config file
+		
+		relative paths are confirmed before usage, so they should work always
+	fix:
+		`config.useSystemTime` time should work propperly now
+		`config.random` should work propperly now
+
+v1.3	2019.09.20
+	BGchanger released
+	fixed problems with config.random
+
+v1.2	2019.09.20
+	config.random got upgraded
+	sort and find algorithms were rewritten to use binary search instead of linear one (means its faster)
+
+v1.1	2019.09
+	config.random got support
+
+v1.0	2019.09
+	1st working version, (without working config.random)
