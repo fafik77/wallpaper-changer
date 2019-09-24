@@ -20,7 +20,7 @@ const char my_window_title[]= "BGchanger WindowsApi32";
 const UINT kCommandLineArgsMessageId= RegisterWindowMessageW( L"getsAdditionalCmdArgs" );
 const UINT IDT_TIMER1= 0xFF1;
 
-void useCmdArgs(int argc, LPWSTR *argList, bool restricted=true);
+void useCmdArgs(int argc, LPWSTR *argList, bool restricted=true, bool unrestrictedOnly=false);
 
 
 
@@ -51,6 +51,11 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 	} catch( ... ) {}
 
 
+	LPWSTR *szArgList= nullptr;
+	int argCount= 0;
+	szArgList= CommandLineToArgvW( tempCmdArgLine, &argCount );
+
+
 	images= new imageDirExplorer();
 	wchar_t ownPth[MAX_PATH+100];
 		/// When NULL is passed to GetModuleHandle, the handle of the exe itself is returned
@@ -62,6 +67,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 		temp_mePath= temp_mePath.substr(0, temp_mePath.find_last_of('\\') );
 		images->_OwnPath= temp_mePath+ L"\\";
 	}
+	useCmdArgs( argCount, szArgList, false, true );
 
 	images->_ImageConverter_exe=  L"ConvertImage.exe";
 	images->_ImageConverter_args= L"90";
@@ -76,13 +82,9 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 	images->prepStart();
 	images->imageChange();
 
-	LPWSTR *szArgList= nullptr;
-	int argCount= 0;
-	szArgList= CommandLineToArgvW( tempCmdArgLine, &argCount );
+
 	useCmdArgs( argCount, szArgList, false );
 	LocalFree(szArgList);
-
-
 
 
 		///This is the handle for our window
@@ -196,7 +198,7 @@ LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 return 0;
 }
 
-void useCmdArgs(int argc, LPWSTR *argList, bool restricted)
+void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnly)
 {
 	configArgsContent& item= images->ArgsConfig;
 	int starts_i= 1;
@@ -215,25 +217,10 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted)
 				printf("# arg /cd set\n");
 				++starts_i;
 			}
-		} else if( arg_key== L"/show" ){
-			images->showImageList();
-		} else if( arg_key== L"/showall" ){
-			images->showFullImageList();
-		} else if( arg_key== L"/rescan" ){
-			images->rescan();
 		} else if( !restricted && arg_key== L"/log" ){
 			item.showLogTo= std::string( arg_val.begin(), arg_val.end() );
 			remove( item.showLogTo.c_str() );
 			++starts_i;
-		} else if( arg_key== L"/next" ){
-			images->imageChange();
-		} else if( arg_key== L"/fput" ){
-			item.forcedImageChoosing= true;
-		} else if( arg_key== L"/nput" ){
-			item.forcedImageChoosing= false;
-		} else if( arg_key== L"/exit" ){
-			PostQuitMessage(1);
-			return;
 		} else if( !restricted && (arg_key== L"/?" || arg_key== L"/h" || arg_key== L"/help") ){
 			printf("\
   Version 1.4\ton 2019.09.24\n\
@@ -252,6 +239,25 @@ Argument order does mater, and catches all from begin to end\n\
   [1]\t if not a switch ImageFileName is assumed to show now\n\
 ===  # End #  ===\n\
 ");
+//			PostQuitMessage(1);
+			delete images;
+			exit(2);
+		} else if( unrestrictedOnly ){	//if above args are not met && only early startup args are to be done, break
+			++starts_i;
+			continue;
+		} else if( arg_key== L"/show" ){
+			images->showImageList();
+		} else if( arg_key== L"/showall" ){
+			images->showFullImageList();
+		} else if( arg_key== L"/rescan" ){
+			images->rescan();
+		} else if( arg_key== L"/next" ){
+			images->imageChange();
+		} else if( arg_key== L"/fput" ){
+			item.forcedImageChoosing= true;
+		} else if( arg_key== L"/nput" ){
+			item.forcedImageChoosing= false;
+		} else if( arg_key== L"/exit" ){
 			PostQuitMessage(1);
 			return;
 		} else if( starts_i==1 ){	//not a switch Assuming ImageFileName

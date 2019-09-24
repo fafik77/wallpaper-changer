@@ -1,6 +1,10 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.4+	2019.09.24	slight fix to CMD arguments
+	fix:
+		CMD arguments as: /help /cd /log work again as expected
+
 v1.4	2019.09.24	maybe the final Version
 	new:
 		running program can be talked with, using program CMD arguments

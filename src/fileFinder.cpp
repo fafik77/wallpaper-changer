@@ -597,8 +597,8 @@ size_t imageDirExplorer::writeUtfLine( const std::wstring& strWrite, const std::
 
 	FILE* out_file= fopen( file_out.c_str(), modeOpenOveride.c_str() );
 	if( out_file ){
-	 retVal+= fwrite( strWrite.c_str() , wcslen(strWrite.c_str()) * sizeof(wchar_t), 1, out_file );
-	 retVal+= fwrite( temp_endl.c_str(), wcslen(temp_endl.c_str()) * sizeof(wchar_t), 1, out_file );
+	 retVal+= fwrite( strWrite.c_str() , strWrite.size() * sizeof(wchar_t), 1, out_file );
+	 retVal+= fwrite( temp_endl.c_str(), temp_endl.size() * sizeof(wchar_t), 1, out_file );
 	 fclose( out_file );
 	} else return -1;
 return retVal;
