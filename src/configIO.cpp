@@ -239,9 +239,9 @@ bool configFile::Open(const std::string& file)
 					bool removedPart= true;
 					while(removedPart){
 						removedPart= stringBegins( str_out.at(1), ".\\", false, &str_out.at(1) );
-						if(!removedPart) removedPart= stringBegins( str_out.at(1), "./",  false, &str_out.at(1) );
-						if(!removedPart) removedPart= stringBegins( str_out.at(1), "/",   false, &str_out.at(1) );
-						if(!removedPart) removedPart= stringBegins( str_out.at(1), "\\",  false, &str_out.at(1) );
+						if(!removedPart) removedPart= stringBegins( str_out.at(1), "./",	false, &str_out.at(1) );
+						if(!removedPart) removedPart= stringBegins( str_out.at(1), "/",		false, &str_out.at(1) );
+						if(!removedPart) removedPart= stringBegins( str_out.at(1), "\\",	false, &str_out.at(1) );
 					}
 					cfg_content.imageFolder= str_out.at(1);
 				}else if( str_out.at(0) == "useSystemTime" ){

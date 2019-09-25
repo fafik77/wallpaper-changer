@@ -1,7 +1,7 @@
 #if defined(UNICODE) && !defined(_UNICODE)
-    #define _UNICODE
+	#define _UNICODE
 #elif defined(_UNICODE) && !defined(UNICODE)
-    #define UNICODE
+	#define UNICODE
 #endif
 
 //#include <tchar.h>
@@ -239,7 +239,6 @@ Argument order does mater, and catches all from begin to end\n\
   [1]\t if not a switch ImageFileName is assumed to show now\n\
 ===  # End #  ===\n\
 ");
-//			PostQuitMessage(1);
 			delete images;
 			exit(2);
 		} else if( unrestrictedOnly ){	//if above args are not met && only early startup args are to be done, break

@@ -170,6 +170,49 @@ bool stringEnds(const std::wstring& stringIn, const vectorString& ends, bool Cas
 	return false;
 }
 
+imageDirExplorer::fileHKeeper_item* imageDirExplorer::fileHKeeper_list::getOrAdd(const std::string& name, std::string modeOpenOveride)
+{
+	for( auto atIt : tableItems){
+		if( atIt->name== name ){
+			return atIt;
+		}
+	}
+	//not found make new
+	if( modeOpenOveride.size()<3 ) modeOpenOveride+= ",ccs=UTF-8";
+	FILE* out_file= fopen( name.c_str(), modeOpenOveride.c_str() );
+	fileHKeeper_item* tempNew= new fileHKeeper_item(name, out_file);
+	tableItems.push_back( tempNew );
+	return tempNew;
+}
+void imageDirExplorer::fileHKeeper_list::clear()
+{
+	while( tableItems.size() ){
+		delete tableItems.back();
+		tableItems.erase( tableItems.end()-1 );
+	}
+}
+void imageDirExplorer::fileHKeeper_list::deleteOldItems()
+{
+	size_t atItt= tableItems.size();
+	for( ; atItt!= 0; --atItt ){
+		std::vector<fileHKeeper_item*>::iterator atIt= tableItems.begin()+(atItt-1);
+		if( (*atIt)->time++ > 1 ){
+			delete *atIt;
+			tableItems.erase(atIt);
+		}
+	}
+}
+int imageDirExplorer::fileHKeeper_list::removeFile( const std::string& name )
+{
+	for( auto atIt= tableItems.begin(); atIt!= tableItems.end(); ++atIt ){
+		if( (*atIt)->name== name ){
+			delete *atIt;
+			tableItems.erase( atIt );
+			break;
+		}
+	}
+	return remove( name.c_str() );
+}
 
 bool imageDirExplorer::imageChangeTo(std::wstring imgName)
 {
@@ -286,7 +329,10 @@ void imageDirExplorer::showImageList()
 		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
 		wprintf( L" %s\n", (*DF_list_p.at_pos(temp_u))->getPathName(false).c_str() );
 	}
-	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
+	if( ArgsConfig.showLogTo.size() ){
+		writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
+		list_writeUtfLine.getOrAdd( ArgsConfig.showLogTo, "a+" )->flush_file();
+	}
 	printf("] end. image order\n");
 }
 void imageDirExplorer::showFullImageList()
@@ -305,11 +351,15 @@ void imageDirExplorer::showFullImageList()
 		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_tempP.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
 		wprintf( L" %s\n", (*DF_list_tempP.at_pos(temp_u))->getPathName(false).c_str() );
 	}
-	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
+	if( ArgsConfig.showLogTo.size() ){
+		writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
+		list_writeUtfLine.getOrAdd( ArgsConfig.showLogTo, "a+" )->flush_file();
+	}
 	printf("] end. image order\n");
 }
 BYTE imageDirExplorer::WaitUntilTime()
 {
+	list_writeUtfLine.deleteOldItems();
 		///get time now
 	std::time_t ttime_now= std::time(0);
 
@@ -492,7 +542,10 @@ void imageDirExplorer::prepStart( bool LoadShownImg )
 	getImagesFromDir();
 	if(DF_list.empty() ){
 		printf("!!! !Error! nothing to work with.\n");
-		if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"!!! !Error! nothing to work with", ArgsConfig.showLogTo );
+		if( ArgsConfig.showLogTo.size() ){
+			writeUtfLine( L"!!! !Error 404! nothing to work with", ArgsConfig.showLogTo );
+			list_writeUtfLine.clear();
+		}
 		PostQuitMessage(404);
 		exit(404);
 	}
@@ -512,7 +565,7 @@ void imageDirExplorer::rescan()
 }
 void imageDirExplorer::SavedList_remove()
 {
-	remove( "BGchanger_List.cfg" );
+	list_writeUtfLine.removeFile( "BGchanger_List.cfg" );
 }
 void imageDirExplorer::SavedList_read()
 {
@@ -595,11 +648,11 @@ size_t imageDirExplorer::writeUtfLine( const std::wstring& strWrite, const std::
 
 	modeOpenOveride+= ",ccs=UTF-8";
 
-	FILE* out_file= fopen( file_out.c_str(), modeOpenOveride.c_str() );
+	FILE* out_file= list_writeUtfLine.getOrAdd( file_out.c_str(), modeOpenOveride.c_str() )->get_file();
+
 	if( out_file ){
 	 retVal+= fwrite( strWrite.c_str() , strWrite.size() * sizeof(wchar_t), 1, out_file );
 	 retVal+= fwrite( temp_endl.c_str(), temp_endl.size() * sizeof(wchar_t), 1, out_file );
-	 fclose( out_file );
 	} else return -1;
 return retVal;
 }

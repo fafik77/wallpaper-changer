@@ -93,6 +93,32 @@ class imageDirExplorer{
  	imageDirExplorer(){
 		cwd_update();
  	}
+ 	struct fileHKeeper_list;
+ 	struct fileHKeeper_item{
+ 		fileHKeeper_item(const std::string& name_, FILE* _fh_):
+ 			name(name_), _fh(_fh_){}
+		~fileHKeeper_item(){
+			if(_fh) fclose(_fh);
+		}
+		const std::string& get_name()const{ return name; }
+		FILE* get_file(){ time= 0; return _fh; }
+		int flush_file(){ if(_fh) return fflush(_fh); return -1; }
+	 protected:
+	 	friend class fileHKeeper_list;
+ 		BYTE time= 0;
+ 		std::string name;
+ 		FILE* _fh;
+ 	};
+ 	struct fileHKeeper_list{
+ 		~fileHKeeper_list(){ clear(); }
+			///should never give nullptr
+ 		fileHKeeper_item* getOrAdd(const std::string& name, std::string modeOpenOveride="a+" );
+ 		void clear();
+ 		void deleteOldItems();
+ 		int removeFile( const std::string& name );
+	 protected:
+		std::vector<fileHKeeper_item*> tableItems;
+ 	};
  	void cwd_update(){ cwd_my= _wgetcwd( NULL, FILENAME_MAX*2 ); }
 
  	configFile mainConfig;
@@ -142,6 +168,7 @@ class imageDirExplorer{
 		///will remove file after 1 Sleep
 	std::wstring problematicFormat_ext;
 
+	fileHKeeper_list list_writeUtfLine;
 	size_t writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride="a+" );
 
 
