@@ -38,7 +38,7 @@ size_t vector_DFp::get_size() const
 
 DirFileEnt::DirFileEnt(	const std::wstring& name_, const std::wstring& path_ ): name(name_), path(path_)
 {
-	if( name_.find_first_of( L"0123456789" )!= name_.npos ) is_number= true;
+//	if( name_.find_first_of( L"0123456789" )!= name_.npos ) is_number= true;
 }
 std::wstring DirFileEnt::getName(bool afterNumber)const
 {
@@ -227,14 +227,13 @@ bool imageDirExplorer::imageChangeTo(std::wstring imgName)
 	pathBegins+= pathGoesBack;
 	pathBegins+= pathBegins.back()==L'\\'? L"" : L"\\";
 
+	bool didSetSucc= false;
 	if( stringBegins( imgName, pathBegins, true, &restPath ) ){
 		size_t valEl= ImgInList_find( restPath );
-		if( valEl==imgName.npos && ArgsConfig.forcedImageChoosing){
-			prepStart( false );
-			valEl= ImgInList_find( restPath );
-			SavedList_read();
-		}
 		if( valEl!= imgName.npos ){
+			didSetSucc= true;
+			if(image_p) SavedList_add();	//to not show again
+
 			image_i= valEl;
 			image_p= *DF_list_p.at_pos(valEl);
 			if(!mainConfig.cfg_content.random){
@@ -243,9 +242,28 @@ bool imageDirExplorer::imageChangeTo(std::wstring imgName)
 			image_1Shown= 1;	//enforce imageChange() to show currently selected element
 			imageChange();
 			DF_list_p.delEl(valEl);
+			if(mainConfig.cfg_content.saveLastImages) writeUtfLine( image_p->getPathName(), "BGchanger_selected.cfg", "w" );
 		}
 	}
-return 0;
+	if( !didSetSucc && ArgsConfig.forcedImageChoosing && exists_Wfile(imgName.c_str() ) ){
+		if( !stringEnds( imgName, mainConfig.cfg_content.imageExt, true ) ){
+			wprintf( L"! Error: requested \"%s\" .Ext doesnt match with config.imageExt\n", imgName.c_str() );
+			return didSetSucc;
+		}
+		didSetSucc= true;
+		DirFileEnt tempFEntry;
+		if( imgName.find(':') )
+			tempFEntry.name= imgName;
+		else{
+			tempFEntry.path= cwd_my+ L"\\";
+			size_t posNameBeg= imgName.find_last_of( L'\\' );
+			if(posNameBeg!= imgName.npos) imgName= imgName.substr( posNameBeg );
+			tempFEntry.name= imgName;
+		}
+		image_1Shown= 1;	//enforce imageChange() to show currently selected element
+		imageChange( &tempFEntry );
+	}
+return didSetSucc;
 }
 
 BYTE imageDirExplorer::getImagesFromDir(const std::wstring& addPath, vectorDF_entry& out_vector)
@@ -394,16 +412,11 @@ BYTE imageDirExplorer::WaitUntilTime()
 		ttime_pulse= 0;
 		imageChange();
 	}
-
-	if( problematicFormat_ext.size() ){
-		DeleteFileW( problematicFormat_ext.c_str() );
-		problematicFormat_ext.clear();
-	}
 return 0;
 }
-void imageDirExplorer::imageChange()
+void imageDirExplorer::imageChange(DirFileEnt* overide)
 {
-	if(image_p && image_1Shown>1){	//old image
+	if(image_p && image_1Shown>1 && !overide){	//old image
 		image_p->selected= 2;
 		SavedList_add();
 	}
@@ -441,9 +454,10 @@ void imageDirExplorer::imageChange()
 
 		///TranscodedWallpaper.jpg
 		///std::wstring str_WinPaperPath(L"%userprofile%\\AppData\\Roaming\\Microsoft\\Windows\\Themes\\");
-	std::wstring str_imgName;
-	str_imgName+= std::wstring(mainConfig.cfg_content.imageFolder.begin(), mainConfig.cfg_content.imageFolder.end())+ L"\\";
-	str_imgName+= image_p->getPathName(false);
+	std::wstring str_imgName(mainConfig.cfg_content.imageFolder.begin(), mainConfig.cfg_content.imageFolder.end());
+	if(str_imgName.back()!= L'\\') str_imgName+= L"\\";
+	if(overide)	str_imgName= overide->getPathName(false);
+	else 		str_imgName+= image_p->getPathName(false);
 	wprintf( L" %s\n", str_imgName.c_str() );
 
 	if( exists_Wfile( str_imgName.c_str() ) ){
@@ -455,11 +469,12 @@ void imageDirExplorer::imageChange()
 			size_t posExtBeg= str_imgName.find_last_of( L'.' );
 			problematicFormat_ext= str_imgName.substr( posExtBeg );
 
-			str_path+= L".JPG";
-			remove( std::string( problematicFormat_ext.begin(), problematicFormat_ext.end() ).c_str() );
-			remove( ".JPG" );
-			Sleep(100);	//give NTFS some time to index that such file no longer exists
-			//DeleteFileW( str_imgName.c_str() );		//does not work at ALLLLLLLL
+			str_path+= L".JPG";		//delete temp conversion files
+			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
+			DeleteFileW( problematicFormat_ext.c_str() );
+			SetFileAttributesW( L".JPG", 0 );
+			DeleteFileW( L".JPG" );
+
 			CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), false );	//fusking winApi never shows what arguments do
 			std::wstring temp_exe_exe( _OwnPath );
 			 temp_exe_exe+= _ImageConverter_exe;
@@ -477,7 +492,7 @@ void imageDirExplorer::imageChange()
 			);
 			int waitedFor= 0;
 			while( waitedFor< 15 ){
-				if( exists_Wfile( L".jpg" ) ) break;
+				if( exists_Wfile( L".JPG" ) ) break;
 				Sleep(100); ++waitedFor;
 			}
 			if(waitedFor>= 15){
@@ -486,8 +501,11 @@ void imageDirExplorer::imageChange()
 				wprintf( temp_errMsg.c_str() );
 				if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
 			}
+			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
+			DeleteFileW( problematicFormat_ext.c_str() );
 		} else {
-			str_path+= str_imgName;	//image is ok = not .PNG
+			if(overide)	str_path= str_imgName;
+			else		str_path+= str_imgName;	//image is ok = not .PNG
 		}
 
 

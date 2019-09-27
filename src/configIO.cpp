@@ -244,10 +244,14 @@ bool configFile::Open(const std::string& file)
 						if(!removedPart) removedPart= stringBegins( str_out.at(1), "\\",	false, &str_out.at(1) );
 					}
 					cfg_content.imageFolder= str_out.at(1);
-				}else if( str_out.at(0) == "useSystemTime" ){
+				} else if( str_out.at(0) == "useSystemTime" ){
 					std::istringstream temp_sis(str_out.at(1));
 					temp_sis>> temp_st;
 					cfg_content.useSystemTime= temp_st;
+				} else if( str_out.at(0) == "forcedImageChoosing" ){
+					std::istringstream temp_sis(str_out.at(1));
+					temp_sis>> temp_st;
+					cfg_content.forcedImageChoosing= temp_st;
 				} else if( str_out.at(0) == "readjustTimeAfterSleep" ){
 					std::istringstream temp_sis(str_out.at(1));
 					temp_sis>> temp_st;

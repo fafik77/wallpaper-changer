@@ -79,6 +79,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 		fastPush.push_back( ".webp" );
 	}
 	images->mainConfig.Open("BGchanger.cfg");
+	images->ArgsConfig.forcedImageChoosing= images->mainConfig.cfg_content.forcedImageChoosing;
 	images->prepStart();
 	images->imageChange();
 
@@ -223,7 +224,7 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 			++starts_i;
 		} else if( !restricted && (arg_key== L"/?" || arg_key== L"/h" || arg_key== L"/help") ){
 			printf("\
-  Version 1.4\ton 2019.09.24\n\
+  Version 1.6\ton 2019.09.27\n\
 Showing Help\n\
 Argument order does mater, and catches all from begin to end\n\
 === Arguments ===\n\

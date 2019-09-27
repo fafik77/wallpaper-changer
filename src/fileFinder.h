@@ -12,13 +12,11 @@
 	///contains path and fileName, with custom sort
 struct DirFileEnt{
 	DirFileEnt(	const std::wstring& name_, const std::wstring& path_=L"" );
-	DirFileEnt();
+	DirFileEnt(){};
 		///file name
 	std::wstring name;
-	bool is_number= 0;
 		///path to file
 	std::wstring path;
-	int sortPos= 0;
 	byte selected= 0;
 
 		///return name
@@ -142,7 +140,7 @@ class imageDirExplorer{
 	void sortBy();
 	void showImageList();
 	void showFullImageList();
-	void imageChange();
+	void imageChange(DirFileEnt* overide= nullptr);
 	bool imageChangeTo(std::wstring imgName);
 		///new 2019-09-23
 	BYTE WaitUntilTime();

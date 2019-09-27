@@ -34,6 +34,7 @@ struct configFileContent{
 	vectorString imageExt;
 	vectorString _ImageExtProblematic;
 
+	bool forcedImageChoosing= false;
 	BYTE useSystemTime= 0;
 		///works only with useSystemTime
 	BYTE readjustTimeAfterSleep= 0;
