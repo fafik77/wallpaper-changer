@@ -1,6 +1,9 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.6+	2019.09.28
+	fix: sometimes converted images wouldnt show. (added more delay)
+
 v1.6	2019.09.27
 	fix:
 		images wouldnt get converted (do mind that BGchanger should have full Rights to all images to work)

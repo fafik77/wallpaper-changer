@@ -224,7 +224,7 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 			++starts_i;
 		} else if( !restricted && (arg_key== L"/?" || arg_key== L"/h" || arg_key== L"/help") ){
 			printf("\
-  Version 1.6\ton 2019.09.27\n\
+  Version 1.6+\ton 2019.09.28\n\
 Showing Help\n\
 Argument order does mater, and catches all from begin to end\n\
 === Arguments ===\n\

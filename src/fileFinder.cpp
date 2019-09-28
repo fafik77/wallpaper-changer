@@ -437,7 +437,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 		}
 	}
 
-	if( image_1Shown!= 1 ){	//refresh currently selected image
+	if( image_1Shown!= 1 && !overide){	//refresh currently selected image
 		if( mainConfig.cfg_content.random ){	//new random image
 			image_i= random( size_t(0), DF_list_p.get_size()-1 );
 			image_p= *(DF_list_p.at_pos( image_i ));
@@ -474,6 +474,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			DeleteFileW( problematicFormat_ext.c_str() );
 			SetFileAttributesW( L".JPG", 0 );
 			DeleteFileW( L".JPG" );
+			Sleep(20);	//give NTFS some time to index that such file no longer exists
 
 			CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), false );	//fusking winApi never shows what arguments do
 			std::wstring temp_exe_exe( _OwnPath );
@@ -482,6 +483,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			 temp_argStr+= _ImageConverter_args+ L" ";
 			 temp_argStr+= std::wstring( mainConfig.cfg_content.BG_Colour_RGB.begin(), mainConfig.cfg_content.BG_Colour_RGB.end() );
 
+			wprintf( L" Converting \"%s\" to .jpeg\n", problematicFormat_ext.c_str() );
 			ShellExecuteW(
 				NULL,
 				L"open",
@@ -503,6 +505,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			}
 			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
 			DeleteFileW( problematicFormat_ext.c_str() );
+			Sleep(100);	//give NTFS some time to index (again)
 		} else {
 			if(overide)	str_path= str_imgName;
 			else		str_path+= str_imgName;	//image is ok = not .PNG
