@@ -167,7 +167,7 @@ class imageDirExplorer{
 	std::wstring problematicFormat_ext;
 
 	fileHKeeper_list list_writeUtfLine;
-	size_t writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride="a+" );
+	size_t writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride="a+", bool quickDiscard=false );
 
 
 		///used for `config.random=1`

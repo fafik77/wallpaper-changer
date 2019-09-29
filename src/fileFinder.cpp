@@ -242,7 +242,7 @@ bool imageDirExplorer::imageChangeTo(std::wstring imgName)
 			image_1Shown= 1;	//enforce imageChange() to show currently selected element
 			imageChange();
 			DF_list_p.delEl(valEl);
-			if(mainConfig.cfg_content.saveLastImages) writeUtfLine( image_p->getPathName(), "BGchanger_selected.cfg", "w" );
+			if(mainConfig.cfg_content.saveLastImages) writeUtfLine( image_p->getPathName(), "BGchanger_selected.cfg", "w", true );
 		}
 	}
 	if( !didSetSucc && ArgsConfig.forcedImageChoosing && exists_Wfile(imgName.c_str() ) ){
@@ -449,7 +449,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			image_p->selected= 1;
 			DF_list_p.delEl( image_i );
 		}
-		if(mainConfig.cfg_content.saveLastImages) writeUtfLine( image_p->getPathName(), "BGchanger_selected.cfg", "w" );
+		if(mainConfig.cfg_content.saveLastImages) writeUtfLine( image_p->getPathName(), "BGchanger_selected.cfg", "w", true );
 	} else if( image_1Shown ) image_1Shown= 2;
 
 		///TranscodedWallpaper.jpg
@@ -474,7 +474,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			DeleteFileW( problematicFormat_ext.c_str() );
 			SetFileAttributesW( L".JPG", 0 );
 			DeleteFileW( L".JPG" );
-			Sleep(20);	//give NTFS some time to index that such file no longer exists
+			Sleep(5);	//give NTFS some time to index that such file no longer exists
 
 			CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), false );	//fusking winApi never shows what arguments do
 			std::wstring temp_exe_exe( _OwnPath );
@@ -497,6 +497,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 				if( exists_Wfile( L".JPG" ) ) break;
 				Sleep(100); ++waitedFor;
 			}
+printf("waitedFor = %i\n", waitedFor);
 			if(waitedFor>= 15){
 				std::wstring temp_errMsg( L"! Error ! could not convert image from " );
 				temp_errMsg+= problematicFormat_ext + L" to .jpeg\n";
@@ -505,7 +506,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			}
 			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
 			DeleteFileW( problematicFormat_ext.c_str() );
-			Sleep(100);	//give NTFS some time to index (again)
+			Sleep(5);	//give NTFS some time to index (again)
 		} else {
 			if(overide)	str_path= str_imgName;
 			else		str_path+= str_imgName;	//image is ok = not .PNG
@@ -662,18 +663,23 @@ void imageDirExplorer::SavedList_add()
 	if( image_p &&  lastItemName!= image_p->getPathName(false) )
 		writeUtfLine( image_p->getPathName(false), "BGchanger_List.cfg" );
 }
-size_t imageDirExplorer::writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride )
+size_t imageDirExplorer::writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride, bool quickDiscard )
 {
 	size_t retVal= 0;
 	std::wstring temp_endl( L"\n");
 
 	modeOpenOveride+= ",ccs=UTF-8";
-
-	FILE* out_file= list_writeUtfLine.getOrAdd( file_out.c_str(), modeOpenOveride.c_str() )->get_file();
+	FILE* out_file= nullptr;
+	if(quickDiscard){
+		out_file= fopen( file_out.c_str(), modeOpenOveride.c_str() );
+	} else {
+		out_file= list_writeUtfLine.getOrAdd( file_out.c_str(), modeOpenOveride )->get_file();
+	}
 
 	if( out_file ){
 	 retVal+= fwrite( strWrite.c_str() , strWrite.size() * sizeof(wchar_t), 1, out_file );
 	 retVal+= fwrite( temp_endl.c_str(), temp_endl.size() * sizeof(wchar_t), 1, out_file );
+	 if(quickDiscard) fclose( out_file );
 	} else return -1;
 return retVal;
 }

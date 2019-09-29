@@ -1,6 +1,10 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.7	2019.09.29
+	fix:	blank images should not apear anymore(unless image fails to convert in 1sec)
+	"ConvertImage.exe" updated to produce less confusion with files that dont realy exist
+
 v1.6+	2019.09.28
 	fix: sometimes converted images wouldnt show. (added more delay)
 

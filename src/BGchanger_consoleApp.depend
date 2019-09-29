@@ -1,12 +1,12 @@
 # depslib dependency file v1.0
-1569588784 source:d:\cpp\bgchanger_consoleapp\main.cpp
+1569704310 source:d:\cpp\bgchanger_consoleapp\main.cpp
 	"fileFinder.h"
 	<windows.h>
 
-1569587736 source:d:\cpp\bgchanger_consoleapp\filefinder.cpp
+1569793679 source:d:\cpp\bgchanger_consoleapp\filefinder.cpp
 	"fileFinder.h"
 
-1569586450 d:\cpp\bgchanger_consoleapp\filefinder.h
+1569793803 d:\cpp\bgchanger_consoleapp\filefinder.h
 	<ctime>
 	<stdlib.h>
 	"configIO.h"
