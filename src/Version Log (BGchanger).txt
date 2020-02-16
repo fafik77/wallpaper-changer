@@ -1,6 +1,19 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8	2020.02.16
+	new CMD arguments:
+		/wpshow				lunches current wallpaper in image explorer.
+		/wpstyle <number>	set WallpaperStyle (def 6). use /redraw to apply
+		/wptile <number>	set TileWallpaper (def 0).  use /redraw to apply
+		/redraw				refreshes desktop wallpaper.
+		/pwd				prints current working dir (cd).
+	now:
+		/log filename.log can be single use after 1st instance of BGchanger eg.
+			/log C:/logs/filename.log /show /showall NewImage.jpg
+		changed to Win-RegApi instead of "run reg get"
+		fixed /help/?/h		help is displayed always(has to be 1st argument)
+
 v1.7	2019.09.29
 	fix:	blank images should not apear anymore(unless image fails to convert in 1sec)
 	"ConvertImage.exe" updated to produce less confusion with files that dont realy exist

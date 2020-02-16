@@ -184,6 +184,20 @@ imageDirExplorer::fileHKeeper_item* imageDirExplorer::fileHKeeper_list::getOrAdd
 	tableItems.push_back( tempNew );
 	return tempNew;
 }
+bool imageDirExplorer::fileHKeeper_list::deleteEntry( const std::string& name, bool flushFile )
+{
+	for( auto atIt= tableItems.begin(); atIt!= tableItems.end(); ++atIt ){
+		if( (*atIt)->name== name ){
+			if(flushFile){
+				(*atIt)->flush_file();
+			}
+			delete (*atIt);
+			tableItems.erase( atIt );
+			return true;
+		}
+	}
+return false;
+}
 void imageDirExplorer::fileHKeeper_list::clear()
 {
 	while( tableItems.size() ){
@@ -197,20 +211,21 @@ void imageDirExplorer::fileHKeeper_list::deleteOldItems()
 	for( ; atItt!= 0; --atItt ){
 		std::vector<fileHKeeper_item*>::iterator atIt= tableItems.begin()+(atItt-1);
 		if( (*atIt)->time++ > 1 ){
-			delete *atIt;
+			delete (*atIt);
 			tableItems.erase(atIt);
 		}
 	}
 }
 int imageDirExplorer::fileHKeeper_list::removeFile( const std::string& name )
 {
-	for( auto atIt= tableItems.begin(); atIt!= tableItems.end(); ++atIt ){
-		if( (*atIt)->name== name ){
-			delete *atIt;
-			tableItems.erase( atIt );
-			break;
-		}
-	}
+	deleteEntry(name);
+//	for( auto atIt= tableItems.begin(); atIt!= tableItems.end(); ++atIt ){
+//		if( (*atIt)->name== name ){
+//			delete *atIt;
+//			tableItems.erase( atIt );
+//			break;
+//		}
+//	}
 	return remove( name.c_str() );
 }
 
@@ -247,7 +262,11 @@ bool imageDirExplorer::imageChangeTo(std::wstring imgName)
 	}
 	if( !didSetSucc && ArgsConfig.forcedImageChoosing && exists_Wfile(imgName.c_str() ) ){
 		if( !stringEnds( imgName, mainConfig.cfg_content.imageExt, true ) ){
-			wprintf( L"! Error: requested \"%s\" .Ext doesnt match with config.imageExt\n", imgName.c_str() );
+//			wprintf( L"! Error: requested \"%s\" .Ext doesnt match with config.imageExt\n", imgName.c_str() );
+			std::wstring msg_extNoMatch= L"! Error: requested \"" + imgName + L"\" .Ext doesnt match with config.imageExt\n";
+			wprintf( L"%s", msg_extNoMatch.c_str() );
+			if( ArgsConfig.showLogTo.size() ) writeUtfLine( msg_extNoMatch, ArgsConfig.showLogTo );
+			if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( msg_extNoMatch, ArgsConfig.showThisLogTo );
 			return didSetSucc;
 		}
 		didSetSucc= true;
@@ -342,14 +361,20 @@ void imageDirExplorer::showImageList()
 	if( mainConfig.cfg_content.random )
 		printf("config.random is set to= %u.\n", mainConfig.cfg_content.random);
 	printf("images order= [\n");
-	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= [", ArgsConfig.showLogTo );
+	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= in list[", ArgsConfig.showLogTo );
+	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( L"\nimage order= in list[", ArgsConfig.showThisLogTo );
 	for( size_t temp_u=0; temp_u<DF_list_p.get_size(); ++temp_u ){
 		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
+		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showThisLogTo );
 		wprintf( L" %s\n", (*DF_list_p.at_pos(temp_u))->getPathName(false).c_str() );
 	}
 	if( ArgsConfig.showLogTo.size() ){
 		writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
 		list_writeUtfLine.getOrAdd( ArgsConfig.showLogTo, "a+" )->flush_file();
+	}
+	if( ArgsConfig.showThisLogTo.size() ){
+		writeUtfLine( L"] end. image order\n", ArgsConfig.showThisLogTo );
+		list_writeUtfLine.getOrAdd( ArgsConfig.showThisLogTo, "a+" )->flush_file();
 	}
 	printf("] end. image order\n");
 }
@@ -364,14 +389,20 @@ void imageDirExplorer::showFullImageList()
 	if( mainConfig.cfg_content.random )
 		printf("config.random is set to= %u.\n", mainConfig.cfg_content.random);
 	printf("images order= [\n");
-	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= [", ArgsConfig.showLogTo );
+	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= list all[", ArgsConfig.showLogTo );
+	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( L"\nimage order= list all[", ArgsConfig.showThisLogTo );
 	for( size_t temp_u=0; temp_u<DF_list_tempP.get_size(); ++temp_u ){
 		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_tempP.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
+		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( (*DF_list_tempP.at_pos(temp_u))->getPathName(false), ArgsConfig.showThisLogTo );
 		wprintf( L" %s\n", (*DF_list_tempP.at_pos(temp_u))->getPathName(false).c_str() );
 	}
 	if( ArgsConfig.showLogTo.size() ){
 		writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
 		list_writeUtfLine.getOrAdd( ArgsConfig.showLogTo, "a+" )->flush_file();
+	}
+	if( ArgsConfig.showThisLogTo.size() ){
+		writeUtfLine( L"] end. image order\n", ArgsConfig.showThisLogTo );
+		list_writeUtfLine.getOrAdd( ArgsConfig.showThisLogTo, "a+" )->flush_file();
 	}
 	printf("] end. image order\n");
 }
@@ -413,6 +444,17 @@ BYTE imageDirExplorer::WaitUntilTime()
 		imageChange();
 	}
 return 0;
+}
+void imageDirExplorer::free_singleLog()
+{
+	if( ArgsConfig.showThisLogTo.size() ){
+		list_writeUtfLine.closeFile( ArgsConfig.showThisLogTo, true );
+		ArgsConfig.showThisLogTo.clear();
+	}
+}
+void imageDirExplorer::wpShow()
+{
+	ShellExecuteW(NULL, NULL, getCurrImage().c_str(), NULL, NULL, SW_SHOW);
 }
 void imageDirExplorer::imageChange(DirFileEnt* overide)
 {
@@ -465,6 +507,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 		if( mainConfig.cfg_content.imageFolder.find(':')== str_path.npos ){
 			str_path+= cwd_my+ L"\\";
 		}
+		_CurrImage_stringPath= str_path+ str_imgName;
 		if( stringEnds(str_imgName, mainConfig.cfg_content._ImageExtProblematic, true ) ){	//image is Problematic, convert
 			size_t posExtBeg= str_imgName.find_last_of( L'.' );
 			problematicFormat_ext= str_imgName.substr( posExtBeg );
@@ -503,6 +546,7 @@ printf("waitedFor = %i\n", waitedFor);
 				temp_errMsg+= problematicFormat_ext + L" to .jpeg\n";
 				wprintf( temp_errMsg.c_str() );
 				if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
+				if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showThisLogTo );
 			}
 			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
 			DeleteFileW( problematicFormat_ext.c_str() );
@@ -512,45 +556,46 @@ printf("waitedFor = %i\n", waitedFor);
 			else		str_path+= str_imgName;	//image is ok = not .PNG
 		}
 
-
 		SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (void *)str_path.c_str() , SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+			//new on 2020-02-16
+		SetWStringRegKeyValue( HKEY_CURRENT_USER, L"Control Panel\\Desktop", L"WallPaper", str_path );
+//		std::wstring str_exe_regAdd(L" add \"HKCU\\Control Panel\\Desktop\" /v WallPaper /t REG_SZ /d ");
+//		str_exe_regAdd+= L"\""+ str_path+ L"\" /f";
+//		ShellExecuteW(	//add reg key (admin) with img path
+//			NULL,
+//			L"open",
+//			L"reg",
+//			str_exe_regAdd.c_str(),
+//			NULL,
+//			NULL
+//		);
 
-		std::wstring str_exe_regAdd(L" add \"HKCU\\Control Panel\\Desktop\" /v WallPaper /t REG_SZ /d ");
-		str_exe_regAdd+= L"\""+ str_path+ L"\" /f";
-
-		ShellExecuteW(	//add reg key (admin) with img path
-			NULL,
-			L"open",
-			L"reg",
-			str_exe_regAdd.c_str(),
-			NULL,
-			NULL
-		);
-
-		ShellExecuteW(	//reload desktop BG null
-			NULL,
-			L"open",
-			L"cmd",
-			L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters",
-			NULL,
-			NULL
-		);
-		ShellExecuteW(	//reload desktop BG 1,True
-			NULL,
-			L"open",
-			L"cmd",
-			L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters ,1,True",
-			NULL,
-			NULL
-		);
-		ShellExecuteW(	//reload desktop BG 0,False
-			NULL,
-			L"open",
-			L"cmd",
-			L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters ,0,False",
-			NULL,
-			NULL
-		);
+			//new on 2020-02-16
+		refreshDesktop();
+//		ShellExecuteW(	//reload desktop BG null
+//			NULL,
+//			L"open",
+//			L"cmd",
+//			L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters",
+//			NULL,
+//			NULL
+//		);
+//		ShellExecuteW(	//reload desktop BG 1,True
+//			NULL,
+//			L"open",
+//			L"cmd",
+//			L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters ,1,True",
+//			NULL,
+//			NULL
+//		);
+//		ShellExecuteW(	//reload desktop BG 0,False
+//			NULL,
+//			L"open",
+//			L"cmd",
+//			L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters ,0,False",
+//			NULL,
+//			NULL
+//		);
 
 	} else {
 		printf("  Not Exists, rescan...\n");
@@ -558,6 +603,39 @@ printf("waitedFor = %i\n", waitedFor);
 		return imageChange();
 	}
 
+}
+void imageDirExplorer::log_pwd()
+{
+	std::wstring temp_pwd_path= L"show pwd >\n"+ get_pwd() + L"\n";
+	if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_pwd_path, ArgsConfig.showLogTo );
+	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_pwd_path, ArgsConfig.showThisLogTo );
+}
+void imageDirExplorer::refreshDesktop()
+{
+	ShellExecuteW(	//reload desktop BG null
+		NULL,
+		L"open",
+		L"cmd",
+		L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters",
+		NULL,
+		NULL
+	);
+	ShellExecuteW(	//reload desktop BG 1,True
+		NULL,
+		L"open",
+		L"cmd",
+		L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters ,1,True",
+		NULL,
+		NULL
+	);
+	ShellExecuteW(	//reload desktop BG 0,False
+		NULL,
+		L"open",
+		L"cmd",
+		L" /c RUNDLL32.EXE user32.dll,UpdatePerUserSystemParameters ,0,False",
+		NULL,
+		NULL
+	);
 }
 void imageDirExplorer::prepStart( bool LoadShownImg )
 {
@@ -651,6 +729,7 @@ size_t imageDirExplorer::ImgInList_find( const std::wstring& strImagePath )
 		temp_errMsg+= strImagePath+ L"\"\n";
 		wprintf( (temp_errMsg+ L"\n").c_str() );
 		if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
+		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showThisLogTo );
 		return -1;
 	}
 

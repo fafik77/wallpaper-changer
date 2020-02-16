@@ -114,10 +114,17 @@ class imageDirExplorer{
  		void clear();
  		void deleteOldItems();
  		int removeFile( const std::string& name );
+ 		bool deleteEntry( const std::string& name, bool flushFile=true );
+ 		bool closeFile( const std::string& name, bool flushFile=true ) {return deleteEntry(name, flushFile); }
 	 protected:
 		std::vector<fileHKeeper_item*> tableItems;
  	};
  	void cwd_update(){ cwd_my= _wgetcwd( NULL, FILENAME_MAX*2 ); }
+ 	const std::wstring& get_pwd()const {return cwd_my;}
+ 	void log_pwd();
+ 	const std::wstring& getCurrImage() const {return _CurrImage_stringPath;}
+		///runs all variations of `RUNDLL32.EXE user32.dll`
+ 	void refreshDesktop();
 
  	configFile mainConfig;
  	configArgsContent ArgsConfig;
@@ -144,6 +151,9 @@ class imageDirExplorer{
 	bool imageChangeTo(std::wstring imgName);
 		///new 2019-09-23
 	BYTE WaitUntilTime();
+		///new 2020-02-16
+	void wpShow();
+	void free_singleLog();
 
 		///all the things that need to be done to run it.
 	void prepStart( bool LoadShownImg=true );
@@ -152,6 +162,7 @@ class imageDirExplorer{
 
  protected:
  	std::wstring cwd_my;
+ 	std::wstring _CurrImage_stringPath;
 		///@return 0 no error, 1 error
 	BYTE getImagesFromDir(const std::wstring& addPath , vectorDF_entry& out_vector);
 	std::time_t ttime_pulse= 0;

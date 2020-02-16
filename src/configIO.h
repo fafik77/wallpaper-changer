@@ -6,6 +6,8 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm> // transform
+#include <stdio.h>	//popen
+#include <stdlib.h>
 
 #include <windows.h>
 
@@ -19,7 +21,12 @@ bool stringLineSeparate2(const std::string& str_in, vectorString& out, const std
 bool stringBegins(const std::string& stringIn, const std::string& begins, bool CaseInsensit=true, std::string* rest=nullptr );
 bool stringBegins(const std::wstring& stringIn, const std::wstring& begins, bool CaseInsensit=true, std::wstring* rest=nullptr );
 
+LONG GetStringRegKey(HKEY hKey, const std::string &strValueName, std::string &strValue);
+LONG GetWStringRegKey(HKEY hKey, const std::wstring &strValueName, std::wstring &strValue, const std::wstring &strDefaultValue= L"");
+LONG SetWStringRegKeyValue(const HKEY under_hKey, const std::wstring& under_path, const std::wstring& under_name, const std::wstring& setValue );
 
+//extern "C" FILE *popen(const char *command, const char *mode);
+//extern "C" FILE *pclose(FILE* fp);
 
 struct configFileContent{
 	BYTE random= 0;
@@ -44,6 +51,7 @@ struct configFileContent{
 };
 struct configArgsContent{
 	std::string showLogTo;
+	std::string showThisLogTo;
 	bool forcedImageChoosing= false;
 };
 

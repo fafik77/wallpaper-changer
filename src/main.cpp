@@ -8,9 +8,13 @@
 #include "fileFinder.h"
 #include <windows.h>
 
+	///Version
+const char _Program_Version[]= "1.8";
+	///Version release Date
+const char _Program_VersionDate[]= "2020.02.16";
+
 
 imageDirExplorer* images= nullptr;
-
 	///Declares hander for Windows procedure
 LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
 
@@ -21,7 +25,8 @@ const UINT kCommandLineArgsMessageId= RegisterWindowMessageW( L"getsAdditionalCm
 const UINT IDT_TIMER1= 0xFF1;
 
 void useCmdArgs(int argc, LPWSTR *argList, bool restricted=true, bool unrestrictedOnly=false);
-
+	///@return true if /?help requested
+bool printHelpScreen(const std::wstring arg_key_isHelp);
 
 
 int WINAPI WinMain(HINSTANCE hThisInstance,
@@ -46,6 +51,16 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 			dataSSend.lpData= tempCmdArgLine;
 
 			SendMessageW( main_window_handle, WM_COPYDATA, 0, (LPARAM)&dataSSend );
+{
+	LPWSTR *szArgList= nullptr;
+	int argCount= 0;
+	szArgList= CommandLineToArgvW( tempCmdArgLine, &argCount );
+	if( argCount>1 && printHelpScreen( szArgList[1] ) ){
+		printf("help shown, rest of arguments passed to 1st instance");
+	}
+	LocalFree(szArgList);
+}
+//wprintf(L"args = |%s|\n", tempCmdArgLine);
 			return 0x1;
 		}
 	} catch( ... ) {}
@@ -203,10 +218,15 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 {
 	configArgsContent& item= images->ArgsConfig;
 	int starts_i= 1;
+	std::wstring arg_key;
+	std::wstring arg_val;
+	long temp_long= 0;
+
 	while( argc> starts_i )
 	{
-		std::wstring arg_key= argList[starts_i];
-		std::wstring arg_val; if(argc> (starts_i+1) ) arg_val= argList[starts_i+1];
+		arg_key= argList[starts_i];
+		if(argc> (starts_i+1) ) arg_val= argList[starts_i+1];
+		else arg_val.clear();
 
 		if( !restricted && arg_key== L"/cd" ){
 			if( !arg_val.empty() ){
@@ -218,33 +238,27 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 				printf("# arg /cd set\n");
 				++starts_i;
 			}
-		} else if( !restricted && arg_key== L"/log" ){
-			item.showLogTo= std::string( arg_val.begin(), arg_val.end() );
-			remove( item.showLogTo.c_str() );
+		} else if( arg_key== L"/log" ){
+			if( restricted ){
+				item.showThisLogTo= std::string( arg_val.begin(), arg_val.end() );
+				remove( item.showThisLogTo.c_str() );
+			} else {	//(!restricted)
+				item.showLogTo= std::string( arg_val.begin(), arg_val.end() );
+				remove( item.showLogTo.c_str() );
+			}
 			++starts_i;
-		} else if( !restricted && (arg_key== L"/?" || arg_key== L"/h" || arg_key== L"/help") ){
-			printf("\
-  Version 1.6+\ton 2019.09.28\n\
-Showing Help\n\
-Argument order does mater, and catches all from begin to end\n\
-=== Arguments ===\n\
-  /cd <path>\t change path that program starts in. OR '~'for self path.\n\
-  /log <pathFileName>\t logs the output to file.\n\
-  /rescan\t rescans image Folder\n\
-  /show\t shows image order.\n\
-  /showall\t shows complete image order.\n\
-  /next\t changes to the next bg.\n\
-  /exit\t exits (other timer calls this with support for more formats)\n\
-  /fput\t when providing an ImageFileName Argument[1]. Always rescans to find it\n\
-  /nput\t ~reversed fput. do NOT rescan to find ImageFileName Argument[1]\n\
-  [1]\t if not a switch ImageFileName is assumed to show now\n\
-===  # End #  ===\n\
-");
+		} else if( !restricted && arg_key== L"/wpstyle" && !arg_val.empty() ){
+			SetWStringRegKeyValue( HKEY_CURRENT_USER, L"Control Panel\\Desktop", L"WallpaperStyle", arg_val );
+		} else if( !restricted && arg_key== L"/wptile"  && !arg_val.empty() ){
+			SetWStringRegKeyValue( HKEY_CURRENT_USER, L"Control Panel\\Desktop", L"TileWallpaper", arg_val );
+		} else if( !restricted && printHelpScreen(arg_key) ){	//help
 			delete images;
 			exit(2);
 		} else if( unrestrictedOnly ){	//if above args are not met && only early startup args are to be done, break
 			++starts_i;
 			continue;
+		} else if( arg_key== L"/pwd" ){
+			images->log_pwd();
 		} else if( arg_key== L"/show" ){
 			images->showImageList();
 		} else if( arg_key== L"/showall" ){
@@ -253,6 +267,10 @@ Argument order does mater, and catches all from begin to end\n\
 			images->rescan();
 		} else if( arg_key== L"/next" ){
 			images->imageChange();
+		} else if( arg_key== L"/wpshow" ){
+			images->wpShow();
+		} else if( arg_key== L"/redraw" ){
+			images->refreshDesktop();
 		} else if( arg_key== L"/fput" ){
 			item.forcedImageChoosing= true;
 		} else if( arg_key== L"/nput" ){
@@ -265,8 +283,38 @@ Argument order does mater, and catches all from begin to end\n\
 		}
 		++starts_i;
 	} //while
+	images->free_singleLog();
 }
 
+bool printHelpScreen(const std::wstring arg_key_isHelp)
+{
+	if(arg_key_isHelp== L"/?" || arg_key_isHelp== L"/h" || arg_key_isHelp== L"/help"){
+		printf("  Version %s\ton %s\n", _Program_Version, _Program_VersionDate);
+		printf("\
+Showing Help\n\
+Argument order does mater, and catches all from begin to end\n\
+=== Arguments ===\n\
+  /cd <path>\t change path that program starts in. OR '~'for self path.\n\
+  /log <path>\t logs the output to file. can be used /log filename.log /show\n\
+  /pwd \t prints current working dir (cd).\n\
+  /rescan\t rescans image Folder\n\
+  /show\t shows image order.\n\
+  /showall\t shows complete image order.\n\
+  /next\t changes to the next bg.\n\
+  /wpshow\t lunches current wallpaper in image explorer.\n\
+  /wpstyle <number>\t set WallpaperStyle (def 6). use /redraw to apply\n\
+  /wptile  <number>\t set TileWallpaper (def 0).  use /redraw to apply\n\
+  /redraw\t refreshes desktop wallpaper.\n\
+  /exit\t exits (other timer calls this with support for more formats)\n\
+  /fput\t when providing an ImageFileName Argument[1]. Always rescans to find it\n\
+  /nput\t ~reversed fput. do NOT rescan to find ImageFileName Argument[1]\n\
+  [1]\t if not a switch ImageFileName is assumed to show now\n\
+===  # End #  ===\n\
+");
+		return true;
+	}
+return false;
+}
 
 
 

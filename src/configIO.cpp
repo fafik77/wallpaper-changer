@@ -41,6 +41,44 @@ bool stringBegins(const std::wstring& stringIn, const std::wstring& begins, bool
 	return retVal;
 }
 
+	///hKey= HKEY_CURRENT_USER
+LONG GetStringRegKey(HKEY hKey, const std::string &strValueName, std::string &strValue)
+{
+	strValue.clear();
+	char szBuffer[512];
+	DWORD dwBufferSize= sizeof(szBuffer);
+	ULONG nError;
+	nError= RegQueryValueExA(hKey, strValueName.c_str(), 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+	if(nError== ERROR_SUCCESS){
+		strValue= szBuffer;
+	}
+	return nError;
+}
+LONG GetWStringRegKey(HKEY hKey, const std::wstring &strValueName, std::wstring &strValue, const std::wstring &strDefaultValue)
+{
+	strValue= strDefaultValue;
+	WCHAR szBuffer[512];
+	DWORD dwBufferSize= sizeof(szBuffer);
+	ULONG nError;
+	nError= RegQueryValueExW(hKey, strValueName.c_str(), 0, NULL, (LPBYTE)szBuffer, &dwBufferSize);
+	if(nError== ERROR_SUCCESS){
+		strValue= szBuffer;
+	}
+	return nError;
+}
+LONG SetWStringRegKeyValue(const HKEY under_hKey, const std::wstring& under_path, const std::wstring& under_name, const std::wstring& setValue )
+{
+	LONG retVal= 0;
+	HKEY h_hKey;
+
+	if( RegOpenKeyExW(under_hKey, under_path.c_str(), 0, KEY_SET_VALUE, &h_hKey)== ERROR_SUCCESS ){
+		//path= L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Zones\\3"
+		retVal= RegSetValueExW(h_hKey, under_name.c_str(), 0, REG_SZ, (LPBYTE)setValue.c_str(), ((wcslen(setValue.c_str()) + 1)* sizeof(WCHAR)));
+		RegCloseKey(h_hKey);
+	}
+return retVal;
+}
+
 
 
 readUtfFile::readUtfFile(size_t bufferSize): ReadOnce_size(bufferSize)
@@ -156,8 +194,6 @@ configFile::~configFile()
 {
 }
 
-
-
 bool configFile::Open(const std::string& file)
 {
 	open_file= file;
@@ -204,34 +240,15 @@ bool configFile::Open(const std::string& file)
 					cfg_content.skipHiddenFolders= temp_st;
 				} else if( str_out.at(0) == "BG_Colour_RGB" ){
 					if( str_out.at(1) == "Background" ){
-						ShellExecute(
-							NULL,
-							"open",
-							"cmd",
-							" /c reg query \"HKEY_CURRENT_USER\\Control Panel\\Colors\" /v Background > []Background[]",
-							NULL,
-							NULL
-						);
-						Sleep(200);
-						{ std::ifstream temp_file_bgCol;
-						temp_file_bgCol.open( "[]Background[]" );
-						if(temp_file_bgCol.good() && temp_file_bgCol.is_open()){
-							std::string str_line;
-							while( !temp_file_bgCol.eof() ){
-								getline( temp_file_bgCol, str_line );
-								if( str_line.find( "Background" )!= str_line.npos ){
-									std::string str_word;
-									std::istringstream temp_sis( str_line );
-									temp_sis>> str_word;
-									temp_sis>> str_word;
-									cfg_content.BG_Colour_RGB= str_line.substr( str_line.find_first_not_of( " \t", temp_sis.tellg() ) );
-								}
+							//new approach on 2020-02-16
+						HKEY h_hKey;
+						if( RegOpenKeyExW(HKEY_CURRENT_USER, L"Control Panel\\Colors", 0, KEY_QUERY_VALUE, &h_hKey)== ERROR_SUCCESS ){
+							if( GetStringRegKey( h_hKey, "Background", cfg_content.BG_Colour_RGB )!= ERROR_SUCCESS ){
+								cfg_content.BG_Colour_RGB= "0 0 0";
 							}
-							temp_file_bgCol.close();
-							temp_file_bgCol.clear();
-						} }
-						Sleep(20);
-						remove( "[]Background[]" );
+							printf("Loaded Background rgb = \"%s\"\n", cfg_content.BG_Colour_RGB.c_str() );
+							RegCloseKey(h_hKey);
+						}
 					} else {
 						cfg_content.BG_Colour_RGB= str_out.at(1);
 					}
