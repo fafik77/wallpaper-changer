@@ -151,8 +151,8 @@ class imageDirExplorer{
 	bool imageChangeTo(std::wstring imgName);
 		///new 2019-09-23
 	BYTE WaitUntilTime();
-		///new 2020-02-16
-	void wpShow();
+//		///new 2020-02-16
+//	void wpShow();
 	void free_singleLog();
 
 		///all the things that need to be done to run it.

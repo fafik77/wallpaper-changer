@@ -40,7 +40,25 @@ bool stringBegins(const std::wstring& stringIn, const std::wstring& begins, bool
 	}
 	return retVal;
 }
-
+int replaceAll_inPlace(std::wstring& str, const std::wstring& rep_from, const std::wstring& rep_to, size_t moveBy)
+{
+	size_t posLast= 0;
+	size_t posNew= 0;
+	int ret_amount= 0;
+	if(moveBy==size_t(-1)) moveBy= rep_to.length();
+	while( (posNew= str.find(rep_from, posLast))!= str.npos ){
+		str.replace(posNew, rep_from.length(), rep_to);
+		posLast= posNew+ moveBy;
+		++ret_amount;
+	}
+	return ret_amount;
+}
+std::wstring replaceAll(std::wstring str, const std::wstring& rep_from, const std::wstring& rep_to, size_t moveBy)
+{
+	std::wstring ret_str(str);
+	replaceAll_inPlace(ret_str, rep_from, rep_to, moveBy);
+	return ret_str;
+}
 	///hKey= HKEY_CURRENT_USER
 LONG GetStringRegKey(HKEY hKey, const std::string &strValueName, std::string &strValue)
 {

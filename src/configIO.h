@@ -15,6 +15,8 @@
 const std::string emptyString;
 typedef std::vector<std::string> vectorString;
 
+int replaceAll_inPlace(std::wstring& str, const std::wstring& rep_from, const std::wstring& rep_to, size_t moveBy= -1);
+std::wstring replaceAll(std::wstring str, const std::wstring& rep_from, const std::wstring& rep_to, size_t moveBy= -1);
 
 bool stringLineSeparate2(const std::string& str_in, vectorString& out, const std::string& separator="=", bool separateAll=false);
 	///@return 0 no, 1 true

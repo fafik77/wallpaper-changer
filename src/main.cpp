@@ -9,9 +9,9 @@
 #include <windows.h>
 
 	///Version
-const char _Program_Version[]= "1.8";
+const char _Program_Version[]= "1.8+";
 	///Version release Date
-const char _Program_VersionDate[]= "2020.02.16";
+const char _Program_VersionDate[]= "2020.02.24";
 
 
 imageDirExplorer* images= nullptr;
@@ -220,7 +220,7 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 	int starts_i= 1;
 	std::wstring arg_key;
 	std::wstring arg_val;
-	long temp_long= 0;
+//	long temp_long= 0;
 
 	while( argc> starts_i )
 	{
@@ -268,7 +268,10 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 		} else if( arg_key== L"/next" ){
 			images->imageChange();
 		} else if( arg_key== L"/wpshow" ){
-			images->wpShow();
+			ShellExecuteW(NULL, NULL, images->getCurrImage().c_str(), NULL, NULL, SW_SHOWNORMAL);
+		} else if( arg_key== L"/wpexplore" || arg_key== L"/wpexplorer" ){
+			std::wstring temp_pathString= L"/select, \""+ replaceAll(images->getCurrImage(), L"/", L"\\") +L"\"";
+			ShellExecuteW(NULL, L"open", L"explorer", temp_pathString.c_str(), NULL, SW_SHOWNORMAL);
 		} else if( arg_key== L"/redraw" ){
 			images->refreshDesktop();
 		} else if( arg_key== L"/fput" ){
@@ -302,6 +305,7 @@ Argument order does mater, and catches all from begin to end\n\
   /showall\t shows complete image order.\n\
   /next\t changes to the next bg.\n\
   /wpshow\t lunches current wallpaper in image explorer.\n\
+  /wpexplore\t selects current wallpaper in explorer.\n\
   /wpstyle <number>\t set WallpaperStyle (def 6). use /redraw to apply\n\
   /wptile  <number>\t set TileWallpaper (def 0).  use /redraw to apply\n\
   /redraw\t refreshes desktop wallpaper.\n\

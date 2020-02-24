@@ -1,6 +1,10 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8+	2020.02.24
+	new CMD arguments:
+		/wpexplorer				selects current wallpaper in explorer.
+
 v1.8	2020.02.16
 	new CMD arguments:
 		/wpshow				lunches current wallpaper in image explorer.

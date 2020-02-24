@@ -452,10 +452,10 @@ void imageDirExplorer::free_singleLog()
 		ArgsConfig.showThisLogTo.clear();
 	}
 }
-void imageDirExplorer::wpShow()
-{
-	ShellExecuteW(NULL, NULL, getCurrImage().c_str(), NULL, NULL, SW_SHOW);
-}
+//void imageDirExplorer::wpShow()
+//{
+//	ShellExecuteW(NULL, NULL, getCurrImage().c_str(), NULL, NULL, SW_SHOW);
+//}
 void imageDirExplorer::imageChange(DirFileEnt* overide)
 {
 	if(image_p && image_1Shown>1 && !overide){	//old image
