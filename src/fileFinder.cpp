@@ -264,9 +264,10 @@ bool imageDirExplorer::imageChangeTo(std::wstring imgName)
 		if( !stringEnds( imgName, mainConfig.cfg_content.imageExt, true ) ){
 //			wprintf( L"! Error: requested \"%s\" .Ext doesnt match with config.imageExt\n", imgName.c_str() );
 			std::wstring msg_extNoMatch= L"! Error: requested \"" + imgName + L"\" .Ext doesnt match with config.imageExt\n";
-			wprintf( L"%s", msg_extNoMatch.c_str() );
-			if( ArgsConfig.showLogTo.size() ) writeUtfLine( msg_extNoMatch, ArgsConfig.showLogTo );
-			if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( msg_extNoMatch, ArgsConfig.showThisLogTo );
+			writeToMultiple(msg_extNoMatch);
+//			wprintf( L"%s", msg_extNoMatch.c_str() );
+//			if( ArgsConfig.showLogTo.size() ) writeUtfLine( msg_extNoMatch, ArgsConfig.showLogTo );
+//			if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( msg_extNoMatch, ArgsConfig.showThisLogTo );
 			return didSetSucc;
 		}
 		didSetSucc= true;
@@ -358,25 +359,30 @@ void imageDirExplorer::sortBy()
 }
 void imageDirExplorer::showImageList()
 {
-	if( mainConfig.cfg_content.random )
-		printf("config.random is set to= %u.\n", mainConfig.cfg_content.random);
-	printf("images order= [\n");
-	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= in list[", ArgsConfig.showLogTo );
-	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( L"\nimage order= in list[", ArgsConfig.showThisLogTo );
-	for( size_t temp_u=0; temp_u<DF_list_p.get_size(); ++temp_u ){
-		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
-		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showThisLogTo );
-		wprintf( L" %s\n", (*DF_list_p.at_pos(temp_u))->getPathName(false).c_str() );
+	if( mainConfig.cfg_content.random ){
+		std::wstringstream tempwstr;
+		tempwstr<< "`config.random=1` is set to= true" << std::endl;
+		writeToMultiple( tempwstr.str() );
 	}
+	printf("images order= [\n");
+	writeToMultiple(L"\nimage order= in list[", writeTo_files);
+//	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= in list[", ArgsConfig.showLogTo );
+//	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( L"\nimage order= in list[", ArgsConfig.showThisLogTo );
+	for( size_t temp_u=0; temp_u<DF_list_p.get_size(); ++temp_u ){
+		std::wstring tempWrite= L"  "+ (*DF_list_p.at_pos(temp_u))->getPathName(false);
+		writeToMultiple(tempWrite);
+		wprintf(L"\n");
+//		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
+//		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( (*DF_list_p.at_pos(temp_u))->getPathName(false), ArgsConfig.showThisLogTo );
+//		wprintf( L" %s\n", (*DF_list_p.at_pos(temp_u))->getPathName(false).c_str() );
+	}
+	writeToMultiple(L"] end. image order\n");
 	if( ArgsConfig.showLogTo.size() ){
-		writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
 		list_writeUtfLine.getOrAdd( ArgsConfig.showLogTo, "a+" )->flush_file();
 	}
 	if( ArgsConfig.showThisLogTo.size() ){
-		writeUtfLine( L"] end. image order\n", ArgsConfig.showThisLogTo );
 		list_writeUtfLine.getOrAdd( ArgsConfig.showThisLogTo, "a+" )->flush_file();
 	}
-	printf("] end. image order\n");
 }
 void imageDirExplorer::showFullImageList()
 {
@@ -386,25 +392,33 @@ void imageDirExplorer::showFullImageList()
 		DF_list_tempP.push_back( &*on_it );
 	}
 
-	if( mainConfig.cfg_content.random )
-		printf("config.random is set to= %u.\n", mainConfig.cfg_content.random);
-	printf("images order= [\n");
-	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= list all[", ArgsConfig.showLogTo );
-	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( L"\nimage order= list all[", ArgsConfig.showThisLogTo );
-	for( size_t temp_u=0; temp_u<DF_list_tempP.get_size(); ++temp_u ){
-		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_tempP.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
-		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( (*DF_list_tempP.at_pos(temp_u))->getPathName(false), ArgsConfig.showThisLogTo );
-		wprintf( L" %s\n", (*DF_list_tempP.at_pos(temp_u))->getPathName(false).c_str() );
+	if( mainConfig.cfg_content.random ){
+		std::wstringstream tempwstr;
+		tempwstr<< "`config.random=1` is set to= true" << std::endl;
+		writeToMultiple( tempwstr.str() );
 	}
+	printf("images order= [\n");
+	writeToMultiple(L"\nimage order= in list[", writeTo_files);
+//	if( ArgsConfig.showLogTo.size() ) writeUtfLine( L"\nimage order= list all[", ArgsConfig.showLogTo );
+//	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( L"\nimage order= list all[", ArgsConfig.showThisLogTo );
+	for( size_t temp_u=0; temp_u<DF_list_tempP.get_size(); ++temp_u ){
+		std::wstring tempWrite= L"  "+ (*DF_list_p.at_pos(temp_u))->getPathName(false);
+		writeToMultiple(tempWrite);
+		wprintf(L"\n");
+//		if( ArgsConfig.showLogTo.size() ) writeUtfLine( (*DF_list_tempP.at_pos(temp_u))->getPathName(false), ArgsConfig.showLogTo );
+//		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( (*DF_list_tempP.at_pos(temp_u))->getPathName(false), ArgsConfig.showThisLogTo );
+//		wprintf( L" %s\n", (*DF_list_tempP.at_pos(temp_u))->getPathName(false).c_str() );
+	}
+writeToMultiple(L"] end. image order\n");
 	if( ArgsConfig.showLogTo.size() ){
-		writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
+//		writeUtfLine( L"] end. image order\n", ArgsConfig.showLogTo );
 		list_writeUtfLine.getOrAdd( ArgsConfig.showLogTo, "a+" )->flush_file();
 	}
 	if( ArgsConfig.showThisLogTo.size() ){
-		writeUtfLine( L"] end. image order\n", ArgsConfig.showThisLogTo );
+//		writeUtfLine( L"] end. image order\n", ArgsConfig.showThisLogTo );
 		list_writeUtfLine.getOrAdd( ArgsConfig.showThisLogTo, "a+" )->flush_file();
 	}
-	printf("] end. image order\n");
+//	printf("] end. image order\n");
 }
 BYTE imageDirExplorer::WaitUntilTime()
 {
@@ -444,6 +458,21 @@ BYTE imageDirExplorer::WaitUntilTime()
 		imageChange();
 	}
 return 0;
+}
+void imageDirExplorer::whenWPChange()
+{
+	struct std::tm tstruct;
+	char buf[80]= {NULL};
+	tstruct= *std::localtime( &ttime_pulse );
+	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+	// for more information about date/time format
+	strftime(buf, sizeof(buf), "%X", &tstruct);
+
+	const std::string tempTimeStr( buf );
+	std::wstring tempStr( tempTimeStr.begin(), tempTimeStr.end() );
+
+	tempStr= L"next wallpaper change " + tempStr + L"\n";
+	return writeToMultiple( tempStr );
 }
 void imageDirExplorer::free_singleLog()
 {
@@ -544,9 +573,10 @@ printf("waitedFor = %i\n", waitedFor);
 			if(waitedFor>= 15){
 				std::wstring temp_errMsg( L"! Error ! could not convert image from " );
 				temp_errMsg+= problematicFormat_ext + L" to .jpeg\n";
-				wprintf( temp_errMsg.c_str() );
-				if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
-				if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showThisLogTo );
+				writeToMultiple(temp_errMsg);
+//				wprintf( temp_errMsg.c_str() );
+//				if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
+//				if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showThisLogTo );
 			}
 			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
 			DeleteFileW( problematicFormat_ext.c_str() );
@@ -555,6 +585,7 @@ printf("waitedFor = %i\n", waitedFor);
 			if(overide)	str_path= str_imgName;
 			else		str_path+= str_imgName;	//image is ok = not .PNG
 		}
+		if(!overide) _CurrRegImage= str_path;
 
 		SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (void *)str_path.c_str() , SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
 			//new on 2020-02-16
@@ -607,8 +638,24 @@ printf("waitedFor = %i\n", waitedFor);
 void imageDirExplorer::log_pwd()
 {
 	std::wstring temp_pwd_path= L"show pwd >\n"+ get_pwd() + L"\n";
-	if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_pwd_path, ArgsConfig.showLogTo );
-	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_pwd_path, ArgsConfig.showThisLogTo );
+	writeToMultiple(temp_pwd_path);
+//	if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_pwd_path, ArgsConfig.showLogTo );
+//	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_pwd_path, ArgsConfig.showThisLogTo );
+}
+void imageDirExplorer::reshowWP()
+{
+	if( _CurrRegImage.empty() ) return;
+	if( !exists_Wfile(_CurrRegImage.c_str()) ) return;
+
+	std::wstring temp_errMsg= L"ReShowing current Wallpaper image\n";
+	writeToMultiple(temp_errMsg);
+//	wprintf( temp_errMsg.c_str() );
+//	if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
+//	if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showThisLogTo );
+
+	SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (void *)_CurrRegImage.c_str() , SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+	SetWStringRegKeyValue( HKEY_CURRENT_USER, L"Control Panel\\Desktop", L"WallPaper", _CurrRegImage );
+	refreshDesktop();
 }
 void imageDirExplorer::refreshDesktop()
 {
@@ -727,9 +774,11 @@ size_t imageDirExplorer::ImgInList_find( const std::wstring& strImagePath )
 	} else {
 		std::wstring temp_errMsg( L"List has non existing: \"" );
 		temp_errMsg+= strImagePath+ L"\"\n";
-		wprintf( (temp_errMsg+ L"\n").c_str() );
-		if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
-		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showThisLogTo );
+		writeToMultiple(temp_errMsg);
+		wprintf( L"\n" );
+//		wprintf( (temp_errMsg+ L"\n").c_str() );
+//		if( ArgsConfig.showLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showLogTo );
+//		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( temp_errMsg, ArgsConfig.showThisLogTo );
 		return -1;
 	}
 
@@ -762,7 +811,30 @@ size_t imageDirExplorer::writeUtfLine( const std::wstring& strWrite, const std::
 	} else return -1;
 return retVal;
 }
+void imageDirExplorer::writeToMultiple(const std::wstring& strWrite, writeToMultiple_enum writeToWhere)
+{
+	if(writeToWhere & writeTo_console)
+		wprintf( L"%s", strWrite.c_str() );
 
+	if(writeToWhere & writeTo_files) {
+		if( ArgsConfig.showLogTo.size() ) writeUtfLine( strWrite, ArgsConfig.showLogTo );
+		if( ArgsConfig.showThisLogTo.size() ) writeUtfLine( strWrite, ArgsConfig.showThisLogTo );
+	}
+}
+size_t imageDirExplorer::writeTime(const std::string& fileOut)
+{
+	time_t now= time(0);
+	struct tm tstruct;
+	char buf[80]= {NULL};
+	tstruct= *localtime( &now );
+	// Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+	// for more information about date/time format
+	strftime(buf, sizeof(buf), "%Y-%m-%d  %X", &tstruct);
+
+	const std::string tempTimeStr( buf );
+	const std::wstring tempTime( tempTimeStr.begin(), tempTimeStr.end() );
+	return writeUtfLine( tempTime, fileOut );
+}
 
 bool exists_file(const std::string& name)
 {

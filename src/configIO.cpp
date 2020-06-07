@@ -96,6 +96,22 @@ LONG SetWStringRegKeyValue(const HKEY under_hKey, const std::wstring& under_path
 	}
 return retVal;
 }
+int removeBeginingWhiteSpace(std::string &str)
+{
+	int retVal= 0;
+	std::string::iterator it= str.begin();
+
+	while( it!=str.end() && ((*it)==' ' || (*it)=='\t') ){
+		++it;
+	}
+
+	if(it!= str.begin()){
+		retVal= it- str.begin();
+		str.erase(str.begin(), it );
+	}
+
+	return retVal;
+}
 
 
 
@@ -311,6 +327,9 @@ bool configFile::Open(const std::string& file)
 						temp_st= 86400;
 					}
 					cfg_content.time= temp_st;
+				} else if( str_out.at(0) == "logFile" ){
+					removeBeginingWhiteSpace(str_out.at(1));
+					cfg_content.logFile= str_out.at(1);
 				}
 			}
 		}
@@ -367,6 +386,9 @@ readjustTimeAfterSleep=1\n\
 saveLastImages=1\n\
  @time in seconds ( only n*60 works with `useSystemTime=true`)\n\
 time=10 min\n\
+\n\
+ @save Logs into file, leave empty for no saving(you can also use Arg /log)\n\
+logFile=\n\
 ";
 	cfgFstr.write( temp_str.c_str(), temp_str.length() );
 

@@ -27,6 +27,8 @@ LONG GetStringRegKey(HKEY hKey, const std::string &strValueName, std::string &st
 LONG GetWStringRegKey(HKEY hKey, const std::wstring &strValueName, std::wstring &strValue, const std::wstring &strDefaultValue= L"");
 LONG SetWStringRegKeyValue(const HKEY under_hKey, const std::wstring& under_path, const std::wstring& under_name, const std::wstring& setValue );
 
+int removeBeginingWhiteSpace(std::string &str);
+
 //extern "C" FILE *popen(const char *command, const char *mode);
 //extern "C" FILE *pclose(FILE* fp);
 
@@ -44,6 +46,7 @@ struct configFileContent{
 	vectorString _ImageExtProblematic;
 
 	bool forcedImageChoosing= false;
+	std::string logFile;
 	BYTE useSystemTime= 0;
 		///works only with useSystemTime
 	BYTE readjustTimeAfterSleep= 0;

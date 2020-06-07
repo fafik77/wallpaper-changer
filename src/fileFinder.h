@@ -7,6 +7,7 @@
 #include <stdlib.h>	// qsort
 #include "configIO.h"
 #include <direct.h>	//cwd set, get
+#include <random>
 
 
 	///contains path and fileName, with custom sort
@@ -125,6 +126,12 @@ class imageDirExplorer{
  	const std::wstring& getCurrImage() const {return _CurrImage_stringPath;}
 		///runs all variations of `RUNDLL32.EXE user32.dll`
  	void refreshDesktop();
+		///sets the last image again as Wallpaper
+ 	void reshowWP();
+		///logs when next display is to happen
+ 	void whenWPChange();
+		///write time
+	size_t writeTime(const std::string& fileOut);
 
  	configFile mainConfig;
  	configArgsContent ArgsConfig;
@@ -163,6 +170,7 @@ class imageDirExplorer{
  protected:
  	std::wstring cwd_my;
  	std::wstring _CurrImage_stringPath;
+ 	std::wstring _CurrRegImage;
 		///@return 0 no error, 1 error
 	BYTE getImagesFromDir(const std::wstring& addPath , vectorDF_entry& out_vector);
 	std::time_t ttime_pulse= 0;
@@ -179,6 +187,13 @@ class imageDirExplorer{
 
 	fileHKeeper_list list_writeUtfLine;
 	size_t writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride="a+", bool quickDiscard=false );
+	enum writeToMultiple_enum{
+		writeTo_console= 1,
+		writeTo_files= 2,
+		writeTo_all= writeTo_console| writeTo_files,
+	};
+		///will write to wprintf(), ArgsConfig.showLogTo, ArgsConfig.showThisLogTo
+	void writeToMultiple(const std::wstring& strWrite, const writeToMultiple_enum writeToWhere= writeTo_all);
 
 
 		///used for `config.random=1`

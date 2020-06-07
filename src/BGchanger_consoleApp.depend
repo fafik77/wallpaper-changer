@@ -1,26 +1,29 @@
 # depslib dependency file v1.0
-1569704310 source:d:\cpp\bgchanger_consoleapp\main.cpp
+1591536144 source:d:\cpp\bgchanger_consoleapp\main.cpp
 	"fileFinder.h"
 	<windows.h>
 
-1569793679 source:d:\cpp\bgchanger_consoleapp\filefinder.cpp
+1591537345 source:d:\cpp\bgchanger_consoleapp\filefinder.cpp
 	"fileFinder.h"
 
-1569793803 d:\cpp\bgchanger_consoleapp\filefinder.h
+1591535758 d:\cpp\bgchanger_consoleapp\filefinder.h
 	<ctime>
 	<stdlib.h>
 	"configIO.h"
 	<direct.h>
+	<random>
 
-1569581592 source:d:\cpp\bgchanger_consoleapp\configio.cpp
+1591528953 source:d:\cpp\bgchanger_consoleapp\configio.cpp
 	"configIO.h"
 
-1569581587 d:\cpp\bgchanger_consoleapp\configio.h
+1591528708 d:\cpp\bgchanger_consoleapp\configio.h
 	<string>
 	<vector>
 	<fstream>
 	<sstream>
 	<algorithm>
+	<stdio.h>
+	<stdlib.h>
 	<windows.h>
 
 1568312678 source:c:\users\ad\documents\cpp\bgchanger_consoleapp\configio.cpp

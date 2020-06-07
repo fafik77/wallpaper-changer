@@ -9,9 +9,13 @@
 #include <windows.h>
 
 	///Version
-const char _Program_Version[]= "1.8+";
+const char _Program_Version[]= "1.8.1";
 	///Version release Date
-const char _Program_VersionDate[]= "2020.02.24";
+const char _Program_VersionDate[]= "2020.06.07";
+	///github link to sources
+const char _Program_downloadSource[]= "https://github.com/fafik77";
+	///Google Drive download link
+const char _Program_downloadExe[]= "https://drive.google.com/file/d/1-LBV6kRbCCtDYmLDh47I9CNFP_7onoWf/view";
 
 
 imageDirExplorer* images= nullptr;
@@ -95,13 +99,18 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 	}
 	images->mainConfig.Open("BGchanger.cfg");
 	images->ArgsConfig.forcedImageChoosing= images->mainConfig.cfg_content.forcedImageChoosing;
+	if( images->ArgsConfig.showLogTo.empty() ){	//set LogFile
+		images->ArgsConfig.showLogTo= images->mainConfig.cfg_content.logFile;
+		remove( images->ArgsConfig.showLogTo.c_str() );
+		images->writeTime(images->ArgsConfig.showLogTo);	//write date time
+	}
+
 	images->prepStart();
 	images->imageChange();
 
 
 	useCmdArgs( argCount, szArgList, false );
 	LocalFree(szArgList);
-
 
 		///This is the handle for our window
 	HWND hwnd;
@@ -242,9 +251,11 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 			if( restricted ){
 				item.showThisLogTo= std::string( arg_val.begin(), arg_val.end() );
 				remove( item.showThisLogTo.c_str() );
+				images->writeTime(item.showThisLogTo);
 			} else {	//(!restricted)
 				item.showLogTo= std::string( arg_val.begin(), arg_val.end() );
 				remove( item.showLogTo.c_str() );
+				images->writeTime(item.showLogTo);
 			}
 			++starts_i;
 		} else if( !restricted && arg_key== L"/wpstyle" && !arg_val.empty() ){
@@ -267,11 +278,15 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 			images->rescan();
 		} else if( arg_key== L"/next" ){
 			images->imageChange();
+		} else if( arg_key== L"/when" ){
+			images->whenWPChange();
 		} else if( arg_key== L"/wpshow" ){
 			ShellExecuteW(NULL, NULL, images->getCurrImage().c_str(), NULL, NULL, SW_SHOWNORMAL);
 		} else if( arg_key== L"/wpexplore" || arg_key== L"/wpexplorer" ){
 			std::wstring temp_pathString= L"/select, \""+ replaceAll(images->getCurrImage(), L"/", L"\\") +L"\"";
 			ShellExecuteW(NULL, L"open", L"explorer", temp_pathString.c_str(), NULL, SW_SHOWNORMAL);
+		} else if( arg_key== L"/reshow" ){
+			images->reshowWP();
 		} else if( arg_key== L"/redraw" ){
 			images->refreshDesktop();
 		} else if( arg_key== L"/fput" ){
@@ -293,6 +308,8 @@ bool printHelpScreen(const std::wstring arg_key_isHelp)
 {
 	if(arg_key_isHelp== L"/?" || arg_key_isHelp== L"/h" || arg_key_isHelp== L"/help"){
 		printf("  Version %s\ton %s\n", _Program_Version, _Program_VersionDate);
+		printf("  Link source %s\n", _Program_downloadSource);
+		printf("  Link download %s\n", _Program_downloadExe);
 		printf("\
 Showing Help\n\
 Argument order does mater, and catches all from begin to end\n\
@@ -304,10 +321,12 @@ Argument order does mater, and catches all from begin to end\n\
   /show\t shows image order.\n\
   /showall\t shows complete image order.\n\
   /next\t changes to the next bg.\n\
+  /when\t shows when next wallpaper will change\n\
   /wpshow\t lunches current wallpaper in image explorer.\n\
   /wpexplore\t selects current wallpaper in explorer.\n\
   /wpstyle <number>\t set WallpaperStyle (def 6). use /redraw to apply\n\
   /wptile  <number>\t set TileWallpaper (def 0).  use /redraw to apply\n\
+  /reshow\t shows again current wallpaper.\n\
   /redraw\t refreshes desktop wallpaper.\n\
   /exit\t exits (other timer calls this with support for more formats)\n\
   /fput\t when providing an ImageFileName Argument[1]. Always rescans to find it\n\
