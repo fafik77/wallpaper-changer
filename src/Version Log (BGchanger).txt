@@ -1,6 +1,15 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.1	2020.06.07
+	new CMD arguments:
+		/reshow		shows again current wallpaper
+		/when		shows when next wallpaper will change
+	new config options:
+		`config.logFile` (you can also use argument /log filename) save Logs into file, leave empty for no saving
+	LogFiles will now have a date time writen in first line
+	included links to dowloads
+
 v1.8+	2020.02.24
 	new CMD arguments:
 		/wpexplorer				selects current wallpaper in explorer.
