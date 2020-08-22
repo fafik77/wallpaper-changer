@@ -1,6 +1,14 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.2	2020.08.22
+	new: all Message Events are checked to match UUID (for dumb programs prevention reasons)
+	new: any instantce will print out the output (beffore possible only using /log fileName)
+	new config options:
+		`config.convertUTFNames` @copies UTF named image into ANSII named image before showing it(some windows desktops might not like UTF chars in image path)
+	fix: UTF named images can be copied without UTF name for display (for when windows does not like UTF paths)
+	fix: /wpshow would not work with images from argument[1]
+
 v1.8.1	2020.06.07
 	new CMD arguments:
 		/reshow		shows again current wallpaper

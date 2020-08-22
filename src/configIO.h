@@ -44,6 +44,7 @@ struct configFileContent{
 	BYTE skipHiddenFolders= 1;
 	vectorString imageExt;
 	vectorString _ImageExtProblematic;
+	BYTE convertUTFNames= false;
 
 	bool forcedImageChoosing= false;
 	std::string logFile;
@@ -57,7 +58,91 @@ struct configFileContent{
 struct configArgsContent{
 	std::string showLogTo;
 	std::string showThisLogTo;
+	HANDLE hOutPipedToFile;
+
 	bool forcedImageChoosing= false;
+};
+struct struct_uuid{
+ protected:
+	BYTE data[16]= {0};
+ public:
+	~struct_uuid(){}
+	struct_uuid(){}
+	struct_uuid(const int& p1,const short& p2,const short& p3,const short& p4,const LONGLONG& p5);
+	struct_uuid(const int& i4){ if(sizeof(i4)==16){ memcpy(this->data,&i4,16); } }
+	struct_uuid(const int* i4){ memcpy(this->data,i4,16); }
+	struct_uuid(const BYTE* i4){ memcpy(this->data,i4,16); }
+	struct_uuid(const struct_uuid& other){ set_uuid(other); }
+		///@return 1 on fail, 0 on success
+	inline bool set_uuid(const struct_uuid& other){
+		memcpy(this->data,other.data,16);
+		return 0;
+	}
+		///@return 1 on fail, 0 on success
+	bool set_uuid(const BYTE& bytes16){
+		if(sizeof(bytes16)==16){
+			memcpy(this->data,&bytes16,16);
+			return 0;
+		}
+		return 1;
+	}
+		///warning you HAVE to give it 16Bytes of data
+		///@return 1 on fail, 0 on success
+	bool set_uuid(const BYTE* bytes16){
+			memcpy(this->data,bytes16,16);
+			return 0;
+	}
+		///warning you HAVE to give it 16Bytes of data
+		///@return 1 on fail, 0 on success
+	bool set_uuid(const int* bytes16){
+			memcpy(this->data,bytes16,16);
+			return 0;
+	}
+//		///warning! this is used for debugging, with rotated back-to-front values
+//	std::string getHex()const;
+		///@return true if same
+	inline bool operator == (const struct_uuid& other){return !(memcmp(other.data,this->data,16));}
+	operator const BYTE*() const {return data;}
+	operator BYTE*() {return data;}
+};
+
+	///struct for handleCopyData()
+struct copyData_sendStruct_main_primaryBin{ //24 byte total
+		///the UUID of this program & request
+	struct_uuid sign_UUID;
+		///length in Bytes
+	size_t length_of_CmdArgLine=0;
+		///length in Bytes
+	size_t length_of_pathFileCOut=0;
+	copyData_sendStruct_main_primaryBin(){}
+	~copyData_sendStruct_main_primaryBin(){}
+	copyData_sendStruct_main_primaryBin(const struct_uuid& sign_UUID_): sign_UUID(sign_UUID_) {}
+};
+	///struct for handleCopyData()
+struct copyData_sendStruct_main: public copyData_sendStruct_main_primaryBin{
+	LPWSTR CmdArgLine= NULL;
+	LPWSTR pathFileCOut= NULL;
+
+	copyData_sendStruct_main(){}
+	~copyData_sendStruct_main();
+	copyData_sendStruct_main(const void* inBuffer, const size_t &inSize){setFromRawData(inBuffer,inSize);}
+	copyData_sendStruct_main(const struct_uuid& a_uuid, LPWSTR CmdArgLine_, LPWSTR pathFileCOut_=NULL): copyData_sendStruct_main_primaryBin(a_uuid), CmdArgLine(CmdArgLine_), pathFileCOut(pathFileCOut_) {}
+	size_t getSize(){
+		size_t retVal= sizeof(copyData_sendStruct_main_primaryBin); //24 byte total
+		if(CmdArgLine!=NULL) retVal+= (length_of_CmdArgLine=(wcslen(CmdArgLine) * sizeof(wchar_t) )) +1;
+		if(pathFileCOut!=NULL) retVal+= (length_of_pathFileCOut=(wcslen(pathFileCOut) * sizeof(wchar_t) )) +1;
+		return retVal;
+	}
+		///@param outBuffer should be: unused BYTE* type
+	size_t getRawData(void** outBuffer, size_t &outSize);
+		///this function sets data of this object from RawData in
+		///@return 0= success, 1= size too short, 2= declared size in use does not match inSize given
+	int setFromRawData(const void* inBuffer, const size_t &inSize);
+		///@return 0= success, 1= error
+	static bool tryPathOutFile(std::wstring &ioTryPath, const wchar_t* withPathFile, const wchar_t* withFileName=NULL);
+ protected:
+	bool b_owned_CmdArgLine= 0;
+	bool b_owned_pathFileCOut= 0;
 };
 
 	///reads UTF string from ANSI named file

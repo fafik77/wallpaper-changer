@@ -114,6 +114,113 @@ int removeBeginingWhiteSpace(std::string &str)
 }
 
 
+struct_uuid::struct_uuid(const int& p1,const short& p2,const short& p3,const short& p4,const LONGLONG& p5)
+{
+	memcpy(data+ 0,&p1,4);
+	memcpy(data+ 4,&p2,2);
+	memcpy(data+ 6,&p3,2);
+	memcpy(data+ 8,&p4,2);
+	memcpy(data+ 10,((BYTE*)&p5)+0,6);
+}
+//std::string struct_uuid::getHex()const
+//{
+//	const char hexRepr[]= "0123456789abcdef";
+//	std::string retVal;
+//	retVal.reserve(16*2+4);
+//
+//	for(BYTE atPos= 0; atPos<16; ++atPos){
+//		retVal.push_back( hexRepr[(data[atPos])/16] );
+//		retVal.push_back( hexRepr[(data[atPos])&15] );
+//	}
+//	return retVal;
+//}
+copyData_sendStruct_main::~copyData_sendStruct_main()
+{
+	if(b_owned_CmdArgLine && CmdArgLine){
+		delete CmdArgLine;
+		CmdArgLine= NULL;
+	}
+	if(b_owned_pathFileCOut && pathFileCOut){
+		delete pathFileCOut;
+		pathFileCOut= NULL;
+	}
+}
+size_t copyData_sendStruct_main::getRawData(void** outBuffer, size_t &outSize)
+{
+	size_t requiredSizeBytes= 0;
+	size_t lastBytePos= sizeof(copyData_sendStruct_main_primaryBin);
+	BYTE** p_writeBuff= (BYTE**)outBuffer;	//map the proper typeof
+	outSize= requiredSizeBytes= getSize();
+		//make required space
+	(*p_writeBuff)= new BYTE[requiredSizeBytes];
+		//copy the header
+	memcpy( (*p_writeBuff), static_cast<copyData_sendStruct_main_primaryBin*>(this), sizeof(copyData_sendStruct_main_primaryBin));
+	if(CmdArgLine){ //copy CmdArgLine
+		memcpy( (*p_writeBuff)+lastBytePos, CmdArgLine, length_of_CmdArgLine );
+		lastBytePos+= length_of_CmdArgLine;
+		(*p_writeBuff)[lastBytePos++]= char(0);
+	}
+	if(pathFileCOut){ //copy path for 2nd instance output shared file
+		memcpy( (*p_writeBuff)+lastBytePos, pathFileCOut, length_of_pathFileCOut );
+		lastBytePos+= length_of_pathFileCOut;
+		(*p_writeBuff)[lastBytePos++]= char(0);
+	}
+	return requiredSizeBytes;
+}
+int copyData_sendStruct_main::setFromRawData(const void* inBuffer, const size_t &inSize)
+{
+	size_t lastBytePos= sizeof(copyData_sendStruct_main_primaryBin);
+	if( inSize>=lastBytePos ){
+			//map the proper typeof
+		BYTE* inBufferByte= (BYTE*)inBuffer;
+			//set the header data
+		memcpy( static_cast<copyData_sendStruct_main_primaryBin*>(this), inBufferByte , sizeof(copyData_sendStruct_main_primaryBin));
+		if(b_owned_CmdArgLine && CmdArgLine)
+			delete CmdArgLine;
+		CmdArgLine= NULL;
+		if(b_owned_pathFileCOut && pathFileCOut)
+			delete pathFileCOut;
+		pathFileCOut= NULL;
+
+		if( inSize>=(lastBytePos+ length_of_CmdArgLine+ length_of_pathFileCOut+ bool(length_of_CmdArgLine)) ){
+			if(length_of_CmdArgLine){
+				b_owned_CmdArgLine= true;
+				CmdArgLine= new wchar_t[(length_of_CmdArgLine/sizeof(wchar_t)) +1];
+				CmdArgLine[(length_of_CmdArgLine/sizeof(wchar_t))]= 0;
+				memcpy(CmdArgLine, inBufferByte+lastBytePos, length_of_CmdArgLine);
+				lastBytePos+= length_of_CmdArgLine+ 1;
+			}
+
+			if(length_of_pathFileCOut){
+				b_owned_pathFileCOut= true;
+				pathFileCOut= new wchar_t[(length_of_pathFileCOut/sizeof(wchar_t)) +1];
+				pathFileCOut[(length_of_pathFileCOut/sizeof(wchar_t))]= 0;
+				memcpy(pathFileCOut ,inBufferByte+lastBytePos, length_of_pathFileCOut);
+				lastBytePos+= length_of_pathFileCOut+ 1;
+			}
+			return 0; //ok
+		}
+		return 2; //inSize< size declared in use
+	}
+	return 1; //inSize< header
+}
+bool copyData_sendStruct_main::tryPathOutFile(std::wstring &ioTryPath, const wchar_t* withPath, const wchar_t* withFile)
+{
+	size_t fullSize= ioTryPath.size();
+	ioTryPath= ioTryPath.c_str();
+	if(ioTryPath.back()!= L'\\' )
+		ioTryPath.append( L"\\" );
+	ioTryPath.append( withPath );
+	if(withFile) ioTryPath.append( withFile );
+	if(ioTryPath.size()< fullSize){
+		HANDLE hOutFile= CreateFileW(ioTryPath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, (FILE_ATTRIBUTE_NORMAL), NULL ); // |FILE_FLAG_DELETE_ON_CLOSE
+		if(hOutFile){
+			CloseHandle(hOutFile);
+			return 0;
+		}
+	}
+	return 1;
+}
 
 readUtfFile::readUtfFile(size_t bufferSize): ReadOnce_size(bufferSize)
 {
@@ -264,6 +371,10 @@ bool configFile::Open(const std::string& file)
 					stringLineSeparate2(str_out.at(1), cfg_content.imageExt, " ", true);
 				} else if( str_out.at(0) == "convertExt" ){
 					stringLineSeparate2(str_out.at(1),  cfg_content._ImageExtProblematic, " ", true);
+				} else if( str_out.at(0) == "convertUTFNames" ){
+					std::istringstream temp_sis(str_out.at(1));
+					temp_sis>> temp_st;
+					cfg_content.convertUTFNames= temp_st;
 				} else if( str_out.at(0) == "skipFoldersBeginning" ){
 					cfg_content.skipFoldersBeginning= str_out.at(1);
 				}  else if( str_out.at(0) == "skipFoldersEnding" ){
@@ -368,6 +479,8 @@ imageFolder=pic\n\
 imageExt=.png .jpg .jpeg\n\
  @converts image to jpeg before showing it\n\
 convertExt=.png .tif .tiff .webp\n\
+ @copies UTF named image into ANSII named image before showing it(some windows desktops might not like UTF chars in image path)\n\
+convertUTFNames=0\n\
  @to skip ALL folders leave empty, to skip NOTHING use '/'\n\
 skipFoldersBeginning=old\n\
 skipFoldersEnding=/\n\

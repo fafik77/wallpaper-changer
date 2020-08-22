@@ -8,10 +8,11 @@
 #include "fileFinder.h"
 #include <windows.h>
 
+
 	///Version
-const char _Program_Version[]= "1.8.1";
+const char _Program_Version[]= "1.8.2";
 	///Version release Date
-const char _Program_VersionDate[]= "2020.06.07";
+const char _Program_VersionDate[]= "2020.08.22";
 	///github link to sources
 const char _Program_downloadSource[]= "https://github.com/fafik77";
 	///Google Drive download link
@@ -27,6 +28,10 @@ const char szClassName[]= "BGchanger_Win32ApiT";
 const char my_window_title[]= "BGchanger WindowsApi32";
 const UINT kCommandLineArgsMessageId= RegisterWindowMessageW( L"getsAdditionalCmdArgs" );
 const UINT IDT_TIMER1= 0xFF1;
+	// (cant use without admin) https://docs.microsoft.com/en-us/windows/win32/memory/creating-named-shared-memory
+const int priv_sign_uuid[4]= {1598018825, 23380942, 48744897, 37702394};
+const wchar_t BGchanger_Win_fp_out[]= L".BGchanger_Win.o.tmp";
+OSVERSIONINFO osVerInfo;
 
 void useCmdArgs(int argc, LPWSTR *argList, bool restricted=true, bool unrestrictedOnly=false);
 	///@return true if /?help requested
@@ -41,6 +46,12 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 	HANDLE hMutex;
 	LPWSTR tempCmdArgLine( GetCommandLineW() );
 
+	ZeroMemory(&osVerInfo, sizeof(OSVERSIONINFO));
+	osVerInfo.dwOSVersionInfoSize= sizeof(OSVERSIONINFO);
+	GetVersionEx(&osVerInfo);
+
+
+
 	try{
 			// Try to open the mutex.
 		hMutex= OpenMutex( MUTEX_ALL_ACCESS, 0, szClassName );
@@ -48,23 +59,58 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 			hMutex= CreateMutex(0, 0, szClassName );
 		} else {		//call 1st instance
 			HWND main_window_handle= FindWindow( 0, my_window_title );
+				//try to make an output file
+			std::wstring pathFileCOut_str(512, char(0));
+			GetEnvironmentVariableW(L"TEMP", &pathFileCOut_str.front(), pathFileCOut_str.size() );
+			if( copyData_sendStruct_main::tryPathOutFile( pathFileCOut_str,BGchanger_Win_fp_out ) ){
+				pathFileCOut_str.resize (512, char(0));
+				GetEnvironmentVariableW(L"windir", &pathFileCOut_str.front(), pathFileCOut_str.size() );
+				if( copyData_sendStruct_main::tryPathOutFile( pathFileCOut_str,L"Temp\\",BGchanger_Win_fp_out ) ){
+					pathFileCOut_str.clear();
+				}
+			}
+
+			copyData_sendStruct_main dataEx(priv_sign_uuid, tempCmdArgLine, &pathFileCOut_str.front() );
 
 			COPYDATASTRUCT dataSSend;
 			dataSSend.dwData= kCommandLineArgsMessageId;
-			dataSSend.cbData= (wcslen(tempCmdArgLine) * sizeof(wchar_t) ) +1;
-			dataSSend.lpData= tempCmdArgLine;
-
+			BYTE* buffData= NULL;
+			size_t buffOutSize= 0;
+			dataEx.getRawData((void**)&buffData, buffOutSize);
+			dataSSend.cbData= buffOutSize;
+			dataSSend.lpData= buffData;
+				// process cmdArgs in 1st instance
 			SendMessageW( main_window_handle, WM_COPYDATA, 0, (LPARAM)&dataSSend );
-{
-	LPWSTR *szArgList= nullptr;
-	int argCount= 0;
-	szArgList= CommandLineToArgvW( tempCmdArgLine, &argCount );
-	if( argCount>1 && printHelpScreen( szArgList[1] ) ){
-		printf("help shown, rest of arguments passed to 1st instance");
-	}
-	LocalFree(szArgList);
-}
-//wprintf(L"args = |%s|\n", tempCmdArgLine);
+				//show help
+			LPWSTR *szArgList= nullptr;
+			int argCount= 0;
+			bool shownHelp= false;
+			szArgList= CommandLineToArgvW( tempCmdArgLine, &argCount );
+			if( argCount>1 && printHelpScreen( szArgList[1] ) ){
+				shownHelp= true;
+				printf("help shown, rest of arguments passed to 1st instance");
+			}
+				//reclaim some space
+			LocalFree(szArgList);
+
+			if(!shownHelp && pathFileCOut_str.size()){
+				Sleep(1); //give windows time to reindex the file
+				HANDLE hOutFile= CreateFileW(pathFileCOut_str.c_str(), GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, (FILE_ATTRIBUTE_NORMAL|FILE_FLAG_DELETE_ON_CLOSE| FILE_FLAG_NO_BUFFERING|FILE_FLAG_SEQUENTIAL_SCAN ), NULL ); //FILE_SHARE_READ
+				if(hOutFile){
+					char wBuff[514];
+					DWORD readAmount= 0;
+					do{
+						ReadFile(hOutFile, (void*)wBuff, (sizeof(wBuff)-2)*sizeof(wBuff[0]), &readAmount, NULL );
+						if(readAmount){
+							wBuff[ readAmount ]= 0;
+							wBuff[ readAmount+1 ]= 0;
+							wprintf(L"%s", (wchar_t*)wBuff);
+						}
+					}while(readAmount);
+					CloseHandle(hOutFile);
+				}
+			}
+			DeleteFileW(pathFileCOut_str.c_str());
 			return 0x1;
 		}
 	} catch( ... ) {}
@@ -188,11 +234,24 @@ void handleCopyData( HWND mainWindHWND, LPARAM lParam)
 
 	if(data->dwData == kCommandLineArgsMessageId )
 	{
-		LPWSTR *szArgList= nullptr;
-		int argCount= 0;
-		szArgList= CommandLineToArgvW( (LPCWSTR)data->lpData, &argCount );
-		useCmdArgs( argCount, szArgList);
-		LocalFree(szArgList);
+		copyData_sendStruct_main uncodeData;
+		if( uncodeData.setFromRawData(data->lpData,data->cbData) ){
+			return;
+		}
+		if( uncodeData.sign_UUID== priv_sign_uuid ){
+			LPWSTR *szArgList= nullptr;
+			int argCount= 0;
+			szArgList= CommandLineToArgvW( uncodeData.CmdArgLine, &argCount );
+				//make a wFile under the given path n name
+			images->ArgsConfig.hOutPipedToFile= CreateFileW(uncodeData.pathFileCOut, GENERIC_READ|GENERIC_WRITE, (FILE_SHARE_READ), NULL, CREATE_ALWAYS, (FILE_ATTRIBUTE_NORMAL), NULL ); // FILE_SHARE_READ|FILE_SHARE_WRITE, |FILE_FLAG_DELETE_ON_CLOSE
+			useCmdArgs( argCount, szArgList);
+			LocalFree(szArgList);
+			if(images->ArgsConfig.hOutPipedToFile){
+				FlushFileBuffers(images->ArgsConfig.hOutPipedToFile);
+				CloseHandle(images->ArgsConfig.hOutPipedToFile);
+				images->ArgsConfig.hOutPipedToFile= NULL;
+			}
+		}
 	}
 }
 
@@ -229,7 +288,6 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 	int starts_i= 1;
 	std::wstring arg_key;
 	std::wstring arg_val;
-//	long temp_long= 0;
 
 	while( argc> starts_i )
 	{
