@@ -9,3 +9,4 @@ Renders .PNG to jpeg beffore unsuccessfully setting PNG as wallpaper(the wallpap
 
 src is available<br>
 Licence agreement: do not claim this work as yours, do not redistribute but provide link to this site istead<br>
+Download from: <a href="https://drive.google.com/open?id=1-LBV6kRbCCtDYmLDh47I9CNFP_7onoWf">Google Drive</a>
