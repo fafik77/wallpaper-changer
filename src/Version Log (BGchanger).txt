@@ -1,6 +1,9 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.2.1	2021.03.09
+	now includes: GNU General Public License
+
 v1.8.2	2020.08.22
 	new: all Message Events are checked to match UUID (for dumb programs prevention reasons)
 	new: any instantce will print out the output (beffore possible only using /log fileName)
