@@ -6,7 +6,10 @@ Can be configured as you desire<br>
 Renders .PNG to jpeg beffore unsuccessfully setting PNG as wallpaper(the wallpaper looks exactly like PNG in image browser)<br>
 # see BGchanger.cfg for options
 
-
-src is available<br>
+# Downloads
+src is available here<br>
 Licence agreement: do not claim this work as yours, do not redistribute but provide link to this site istead<br>
-Download from: <a href="https://drive.google.com/open?id=1-LBV6kRbCCtDYmLDh47I9CNFP_7onoWf">Google Drive</a>
+Download .exe from: <a href="https://drive.google.com/open?id=1-LBV6kRbCCtDYmLDh47I9CNFP_7onoWf">Google Drive</a>
+
+# GNU General Public License
+see <a href="src/License.txt">src/License.txt</a>
