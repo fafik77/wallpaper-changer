@@ -1,3 +1,21 @@
+/** Copyright (C) 2021 fafik77 ( https://github.com/fafik77 )
+	BGchanger.exe is used to change Wallpaper in Windows(min 2003)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a (partial)copy of the GNU General Public License
+    along with this program.  If not, see https://www.gnu.org/licenses/gpl-3.0.html or https://www.gnu.org/licenses/.
+**/
+
+
 #if defined(UNICODE) && !defined(_UNICODE)
 	#define _UNICODE
 #elif defined(_UNICODE) && !defined(UNICODE)
@@ -10,9 +28,9 @@
 
 
 	///Version
-const char _Program_Version[]= "1.8.2";
+const char _Program_Version[]= "1.8.2.1";
 	///Version release Date
-const char _Program_VersionDate[]= "2020.08.22";
+const char _Program_VersionDate[]= "2021.03.09";
 	///github link to sources
 const char _Program_downloadSource[]= "https://github.com/fafik77";
 	///Google Drive download link
@@ -365,6 +383,9 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 bool printHelpScreen(const std::wstring arg_key_isHelp)
 {
 	if(arg_key_isHelp== L"/?" || arg_key_isHelp== L"/h" || arg_key_isHelp== L"/help"){
+		printf("    Copyright (C) 2021 fafik77 ( https://github.com/fafik77 )\n\
+    This program comes with ABSOLUTELY NO WARRANTY; for details read 'License (BGchanger).txt'\n\
+    This is free software, and you are welcome to redistribute it under GNU 3 License\n\n");
 		printf("  Version %s\ton %s\n", _Program_Version, _Program_VersionDate);
 		printf("  Link source %s\n", _Program_downloadSource);
 		printf("  Link download %s\n", _Program_downloadExe);
