@@ -12,4 +12,5 @@ Licence agreement: do not claim this work as yours, do not redistribute but prov
 Download .exe from: <a href="https://drive.google.com/open?id=1-LBV6kRbCCtDYmLDh47I9CNFP_7onoWf">Google Drive</a>
 
 # GNU General Public License
-see <a href="src/License.txt">src/License.txt</a>
+see <a href="src/License.txt">src/License.txt</a><br>
+<b>Also</b> Provide a link to original Program and its Source https://github.com/fafik77/wallpaper-changer
