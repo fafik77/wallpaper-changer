@@ -3,6 +3,7 @@ BGchanger changes Desktop Wallpaper using various formats(even those that Window
 
 v1.8.2.1	2021.03.09
 	now includes: GNU General Public License
+		also updated ConvertImage.exe
 
 v1.8.2	2020.08.22
 	new: all Message Events are checked to match UUID (for dumb programs prevention reasons)
