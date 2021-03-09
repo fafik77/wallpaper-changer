@@ -4,7 +4,7 @@ GNU General Public License; see full(with special font) license on the web
 
 
 Copyright © 2021  fafik77 ( https://github.com/fafik77 )
-	Provide a link to original Program and its Source https://github.com/fafik77/wallpaper-changer
+    Provide a link to original Program and its Source https://github.com/fafik77/wallpaper-changer
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
