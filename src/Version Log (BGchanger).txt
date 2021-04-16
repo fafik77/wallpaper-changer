@@ -2,6 +2,7 @@ BGchanger changes Desktop Wallpaper using various formats(even those that Window
 
 
 v1.8.2.2	2021.04.16
+	Config file now accepts:	"= true | = false" as input as well as "1/0"
 	new CMD arguments:
 		/what	shows current image name (in console)
 		/wpprev /wprev	lunches previous image in image explorer
