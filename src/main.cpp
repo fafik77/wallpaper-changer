@@ -28,9 +28,9 @@
 
 
 	///Version
-const char _Program_Version[]= "1.8.2.1";
+const char _Program_Version[]= "1.8.2.2";
 	///Version release Date
-const char _Program_VersionDate[]= "2021.03.09";
+const char _Program_VersionDate[]= "2021.04.16";
 	///github link to sources
 const char _Program_downloadSource[]= "https://github.com/fafik77";
 	///Google Drive download link
@@ -113,6 +113,17 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 
 			if(!shownHelp && pathFileCOut_str.size()){
 				Sleep(1); //give windows time to reindex the file
+				BYTE tries= 0;
+				for( ; tries<15; ++tries ){
+					if( exists_Wfile( (pathFileCOut_str+ L".ulock").c_str() ) )
+						break;
+					Sleep(100);
+				}
+				if(tries>= 15){
+					DeleteFileW( pathFileCOut_str.c_str() );
+					DeleteFileW( (pathFileCOut_str+ L".ulock").c_str() );
+				}
+
 				HANDLE hOutFile= CreateFileW(pathFileCOut_str.c_str(), GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, (FILE_ATTRIBUTE_NORMAL|FILE_FLAG_DELETE_ON_CLOSE| FILE_FLAG_NO_BUFFERING|FILE_FLAG_SEQUENTIAL_SCAN ), NULL ); //FILE_SHARE_READ
 				if(hOutFile){
 					char wBuff[514];
@@ -128,7 +139,10 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 					CloseHandle(hOutFile);
 				}
 			}
-			DeleteFileW(pathFileCOut_str.c_str());
+			if( pathFileCOut_str.size() ){	//cleanup
+				DeleteFileW( pathFileCOut_str.c_str() );
+				DeleteFileW( (pathFileCOut_str+ L".ulock").c_str() );
+			}
 			return 0x1;
 		}
 	} catch( ... ) {}
@@ -253,7 +267,7 @@ void handleCopyData( HWND mainWindHWND, LPARAM lParam)
 	if(data->dwData == kCommandLineArgsMessageId )
 	{
 		copyData_sendStruct_main uncodeData;
-		if( uncodeData.setFromRawData(data->lpData,data->cbData) ){
+		if( uncodeData.setFromRawData(data->lpData, data->cbData) ){
 			return;
 		}
 		if( uncodeData.sign_UUID== priv_sign_uuid ){
@@ -261,13 +275,18 @@ void handleCopyData( HWND mainWindHWND, LPARAM lParam)
 			int argCount= 0;
 			szArgList= CommandLineToArgvW( uncodeData.CmdArgLine, &argCount );
 				//make a wFile under the given path n name
-			images->ArgsConfig.hOutPipedToFile= CreateFileW(uncodeData.pathFileCOut, GENERIC_READ|GENERIC_WRITE, (FILE_SHARE_READ), NULL, CREATE_ALWAYS, (FILE_ATTRIBUTE_NORMAL), NULL ); // FILE_SHARE_READ|FILE_SHARE_WRITE, |FILE_FLAG_DELETE_ON_CLOSE
+			images->ArgsConfig.hOutPipedToFile= CreateFileW(uncodeData.pathFileCOut, GENERIC_READ|GENERIC_WRITE, (FILE_SHARE_READ|FILE_SHARE_DELETE), NULL, CREATE_ALWAYS, (FILE_ATTRIBUTE_NORMAL), NULL ); // FILE_SHARE_READ|FILE_SHARE_WRITE, |FILE_FLAG_DELETE_ON_CLOSE
 			useCmdArgs( argCount, szArgList);
 			LocalFree(szArgList);
 			if(images->ArgsConfig.hOutPipedToFile){
 				FlushFileBuffers(images->ArgsConfig.hOutPipedToFile);
 				CloseHandle(images->ArgsConfig.hOutPipedToFile);
 				images->ArgsConfig.hOutPipedToFile= NULL;
+
+				std::wstring tempULock_fileWStr(uncodeData.pathFileCOut);
+				tempULock_fileWStr+= L".ulock";
+				HANDLE tempULock_file= CreateFileW( tempULock_fileWStr.c_str() , GENERIC_WRITE, (FILE_SHARE_VALID_FLAGS), NULL, CREATE_ALWAYS, (FILE_ATTRIBUTE_NORMAL), NULL );
+				CloseHandle(tempULock_file);
 			}
 		}
 	}
@@ -354,13 +373,18 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 			images->rescan();
 		} else if( arg_key== L"/next" ){
 			images->imageChange();
+			images->whatWPDisplayed();
 		} else if( arg_key== L"/when" ){
 			images->whenWPChange();
+		} else if( arg_key== L"/what" ){
+			images->whatWPDisplayed();
 		} else if( arg_key== L"/wpshow" ){
 			ShellExecuteW(NULL, NULL, images->getCurrImage().c_str(), NULL, NULL, SW_SHOWNORMAL);
 		} else if( arg_key== L"/wpexplore" || arg_key== L"/wpexplorer" ){
 			std::wstring temp_pathString= L"/select, \""+ replaceAll(images->getCurrImage(), L"/", L"\\") +L"\"";
 			ShellExecuteW(NULL, L"open", L"explorer", temp_pathString.c_str(), NULL, SW_SHOWNORMAL);
+		} else if( arg_key== L"/wpprev" || arg_key== L"/wprev" ){
+			ShellExecuteW(NULL, NULL, images->getPrevImage().c_str(), NULL, NULL, SW_SHOWNORMAL);
 		} else if( arg_key== L"/reshow" ){
 			images->reshowWP();
 		} else if( arg_key== L"/redraw" ){
@@ -370,6 +394,7 @@ void useCmdArgs(int argc, LPWSTR *argList, bool restricted, bool unrestrictedOnl
 		} else if( arg_key== L"/nput" ){
 			item.forcedImageChoosing= false;
 		} else if( arg_key== L"/exit" ){
+			images->printExitMsg();
 			PostQuitMessage(1);
 			return;
 		} else if( starts_i==1 ){	//not a switch Assuming ImageFileName
@@ -401,10 +426,12 @@ Argument order does mater, and catches all from begin to end\n\
   /showall\t shows complete image order.\n\
   /next\t changes to the next bg.\n\
   /when\t shows when next wallpaper will change\n\
+  /what\t shows the name of current wallpaper image.\n\
   /wpshow\t lunches current wallpaper in image explorer.\n\
   /wpexplore\t selects current wallpaper in explorer.\n\
   /wpstyle <number>\t set WallpaperStyle (def 6). use /redraw to apply\n\
   /wptile  <number>\t set TileWallpaper (def 0).  use /redraw to apply\n\
+  /wpprev\t lunches previous wallpaper in image explorer.\n\
   /reshow\t shows again current wallpaper.\n\
   /redraw\t refreshes desktop wallpaper.\n\
   /exit\t exits (other timer calls this with support for more formats)\n\

@@ -99,7 +99,6 @@ struct struct_uuid{
 			return 0;
 	}
 //		///warning! this is used for debugging, with rotated back-to-front values
-//	std::string getHex()const;
 		///@return true if same
 	inline bool operator == (const struct_uuid& other){return !(memcmp(other.data,this->data,16));}
 	operator const BYTE*() const {return data;}
@@ -174,6 +173,8 @@ class configFile{
  public:
 	configFile();
 	~configFile();
+		///@return -1 error(changes to valueOnError), 0 false, 1 true
+	static BYTE getBoolFromValue(const std::string& val, const BYTE valueOnError= 0);
 
 		///GenerateNew if file does not exist
 	bool Open(const std::string& file);

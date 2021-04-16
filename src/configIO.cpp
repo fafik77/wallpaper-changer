@@ -122,18 +122,6 @@ struct_uuid::struct_uuid(const int& p1,const short& p2,const short& p3,const sho
 	memcpy(data+ 8,&p4,2);
 	memcpy(data+ 10,((BYTE*)&p5)+0,6);
 }
-//std::string struct_uuid::getHex()const
-//{
-//	const char hexRepr[]= "0123456789abcdef";
-//	std::string retVal;
-//	retVal.reserve(16*2+4);
-//
-//	for(BYTE atPos= 0; atPos<16; ++atPos){
-//		retVal.push_back( hexRepr[(data[atPos])/16] );
-//		retVal.push_back( hexRepr[(data[atPos])&15] );
-//	}
-//	return retVal;
-//}
 copyData_sendStruct_main::~copyData_sendStruct_main()
 {
 	if(b_owned_CmdArgLine && CmdArgLine){
@@ -213,7 +201,7 @@ bool copyData_sendStruct_main::tryPathOutFile(std::wstring &ioTryPath, const wch
 	ioTryPath.append( withPath );
 	if(withFile) ioTryPath.append( withFile );
 	if(ioTryPath.size()< fullSize){
-		HANDLE hOutFile= CreateFileW(ioTryPath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, (FILE_ATTRIBUTE_NORMAL), NULL ); // |FILE_FLAG_DELETE_ON_CLOSE
+		HANDLE hOutFile= CreateFileW(ioTryPath.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, (FILE_ATTRIBUTE_NORMAL), NULL );
 		if(hOutFile){
 			CloseHandle(hOutFile);
 			return 0;
@@ -335,6 +323,36 @@ configFile::~configFile()
 {
 }
 
+BYTE configFile::getBoolFromValue(const std::string& val, const BYTE valueOnError)
+{
+	std::string valBetter(val);
+	while( valBetter.size() && ( valBetter.at(0)== ' ' || valBetter.at(0)== '\t' ) )	//remove spaces from start
+		valBetter.erase(0,1);
+
+	BYTE retVal= -1;
+		//try simple 0, 1
+	if(valBetter.size() == 1){
+		if( valBetter.at(0)== '0' ) retVal= 0;
+		else if( valBetter.at(0)== '1' ) retVal= 1;
+	}
+		//try str(true, false)
+	if(retVal== BYTE(-1) ){
+		if( valBetter== "false" ) retVal= 0;
+		else if( valBetter== "true" ) retVal= 1;
+	}
+		//try get number
+	if(retVal== BYTE(-1) ){
+		size_t temp_st= 0;
+		std::istringstream temp_sis( valBetter );
+		temp_sis>> temp_st;
+		if( !temp_sis.bad() )
+			retVal= temp_st;
+	}
+
+if(retVal== BYTE(-1) ) retVal= valueOnError;
+return retVal;
+}
+
 bool configFile::Open(const std::string& file)
 {
 	open_file= file;
@@ -356,33 +374,23 @@ bool configFile::Open(const std::string& file)
 					else printf( "NOT random" );
 					printf("\n");
 				} else if( str_out.at(0) == "sort" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.sort= temp_st;
+					cfg_content.sort= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "sortDigitsAsNumbers" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.sortDigitsAsNumbers= temp_st;
+					cfg_content.sortDigitsAsNumbers= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "DirSortByFileName" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.DirSortByFileName= temp_st;
+					cfg_content.DirSortByFileName= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "imageExt" ){
 					stringLineSeparate2(str_out.at(1), cfg_content.imageExt, " ", true);
 				} else if( str_out.at(0) == "convertExt" ){
 					stringLineSeparate2(str_out.at(1),  cfg_content._ImageExtProblematic, " ", true);
 				} else if( str_out.at(0) == "convertUTFNames" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.convertUTFNames= temp_st;
+					cfg_content.convertUTFNames= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "skipFoldersBeginning" ){
 					cfg_content.skipFoldersBeginning= str_out.at(1);
 				}  else if( str_out.at(0) == "skipFoldersEnding" ){
 					cfg_content.skipFoldersEnding= str_out.at(1);
 				} else if( str_out.at(0) == "skipHiddenFolders" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.skipHiddenFolders= temp_st;
+					cfg_content.skipHiddenFolders= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "BG_Colour_RGB" ){
 					if( str_out.at(1) == "Background" ){
 							//new approach on 2020-02-16
@@ -407,21 +415,13 @@ bool configFile::Open(const std::string& file)
 					}
 					cfg_content.imageFolder= str_out.at(1);
 				} else if( str_out.at(0) == "useSystemTime" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.useSystemTime= temp_st;
+					cfg_content.useSystemTime= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "forcedImageChoosing" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.forcedImageChoosing= temp_st;
+					cfg_content.forcedImageChoosing= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "readjustTimeAfterSleep" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.readjustTimeAfterSleep= temp_st;
+					cfg_content.readjustTimeAfterSleep= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "saveLastImages" ){
-					std::istringstream temp_sis(str_out.at(1));
-					temp_sis>> temp_st;
-					cfg_content.saveLastImages= temp_st;
+					cfg_content.saveLastImages= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "time" ){
 					std::istringstream temp_sis(str_out.at(1));
 					std::string str_rest;

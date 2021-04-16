@@ -1,6 +1,14 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.2.2	2021.04.16
+	new CMD arguments:
+		/what	shows current image name (in console)
+		/wpprev /wprev	lunches previous image in image explorer
+	now:
+		/next	displays image name (in console)
+	fix: UTF(only) named images can be copied without UTF name for display
+
 v1.8.2.1	2021.03.09
 	now includes: GNU General Public License
 		also updated ConvertImage.exe

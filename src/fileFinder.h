@@ -124,12 +124,18 @@ class imageDirExplorer{
  	const std::wstring& get_pwd()const {return cwd_my;}
  	void log_pwd();
  	const std::wstring& getCurrImage() const {return _CurrImage_stringPath;}
+ 	const std::wstring& getPrevImage() const {return _PrevImage_stringPath;}
+
 		///runs all variations of `RUNDLL32.EXE user32.dll`
  	void refreshDesktop();
 		///sets the last image again as Wallpaper
  	void reshowWP();
 		///logs when next display is to happen
  	void whenWPChange();
+		///prints what is the current WP
+ 	void whatWPDisplayed();
+		///print Exit msg
+ 	void printExitMsg();
 		///write time
 	size_t writeTime(const std::string& fileOut);
 
@@ -169,7 +175,11 @@ class imageDirExplorer{
 
  protected:
  	std::wstring cwd_my;
+		///stores the path to current image
  	std::wstring _CurrImage_stringPath;
+		///stores the path to old image
+	std::wstring _PrevImage_stringPath;
+		///stores the path to current imageFile that is shown
  	std::wstring _CurrRegImage;
 		///@return 0 no error, 1 error
 	BYTE getImagesFromDir(const std::wstring& addPath , vectorDF_entry& out_vector);
@@ -201,6 +211,8 @@ class imageDirExplorer{
 		///used for `config.random=1` to determine if 1st image was shown
 	BYTE image_1Shown= 0;
 	DirFileEnt* image_p= nullptr;
+		///stores the entry to previous img
+	DirFileEnt* image_p_old= nullptr;
 };
 
 

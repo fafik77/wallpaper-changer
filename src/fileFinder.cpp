@@ -450,6 +450,23 @@ void imageDirExplorer::whenWPChange()
 	tempStr= L"next wallpaper change " + tempStr + L"\n";
 	return writeToMultiple( tempStr );
 }
+void imageDirExplorer::whatWPDisplayed()
+{
+	std::wstring tempStr( L" WP: " );
+	if(image_p)
+		tempStr+= image_p->getPathName();
+	else
+		tempStr+= L"Error img not found";
+	tempStr+= L"\n";
+
+	return writeToMultiple( tempStr );
+}
+void imageDirExplorer::printExitMsg()
+{
+	std::wstring tempStr( L"Exiting..\n" );
+
+	return writeToMultiple( tempStr );
+}
 void imageDirExplorer::free_singleLog()
 {
 	if( ArgsConfig.showThisLogTo.size() ){
@@ -502,6 +519,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 	if(overide)	str_imgName= overide->getPathName(false);
 	else 		str_imgName+= image_p->getPathName(false);
 	wprintf( L" %s\n", str_imgName.c_str() );
+	_PrevImage_stringPath= _CurrImage_stringPath;
 
 	if( exists_Wfile( str_imgName.c_str() ) ){
 		std::wstring str_path;
@@ -551,7 +569,7 @@ printf("waitedFor = %i00 ms\n", waitedFor);
 			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
 			DeleteFileW( problematicFormat_ext.c_str() );
 			Sleep(5);	//give NTFS some time to index (again)
-		} else if(mainConfig.cfg_content.convertUTFNames, stringContainsUTFchars(str_imgName) ) {
+		} else if(mainConfig.cfg_content.convertUTFNames && stringContainsUTFchars(str_imgName) ) {
 			size_t posExtBeg= str_imgName.find_last_of( L'.' );
 			if(overide) str_path+= L"_";
 			str_path+= str_imgName.substr( posExtBeg );
@@ -578,7 +596,8 @@ printf("waitedFor = %i00 ms\n", waitedFor);
 }
 bool imageDirExplorer::stringContainsUTFchars(const std::wstring& wstrIn)
 {
-	wchar_t fUTF= 127;
+		///last char of ANSII
+	const wchar_t fUTF= 127;
 	for(std::wstring::const_iterator iterWStr= wstrIn.begin(); iterWStr!= wstrIn.end(); ++iterWStr){
 		if( (*iterWStr)>fUTF ) return 1;
 	}
@@ -591,8 +610,10 @@ void imageDirExplorer::log_pwd()
 }
 void imageDirExplorer::reshowWP()
 {
-	if( _CurrRegImage.empty() ) return;
-	if( !exists_Wfile(_CurrRegImage.c_str()) ) return;
+	if( _CurrRegImage.empty() || !exists_Wfile(_CurrRegImage.c_str()) ){
+		writeToMultiple( L"reshow! failed, image NOT found\n" );
+		return;
+	}
 
 	std::wstring temp_errMsg= L"ReShowing current Wallpaper image\n";
 	writeToMultiple(temp_errMsg);
@@ -669,11 +690,12 @@ void imageDirExplorer::SavedList_read()
 	if( !mainConfig.cfg_content.saveLastImages ) return;
 
 	readUtfFile ListFile;
+	std::wstring Line;
+	size_t valDelEl;
 	if( ListFile.Open( "BGchanger_List.cfg" ) ){
-		std::wstring Line;
 		while( ListFile.readLine( Line ) ){
 			if( Line.size() ){
-				size_t valDelEl= ImgInList_find( Line );
+				valDelEl= ImgInList_find( Line );
 				if( valDelEl!= Line.npos ){
 					DF_list_p.delEl( valDelEl );
 					lastItemName= Line;
@@ -734,9 +756,11 @@ size_t imageDirExplorer::ImgInList_find( const std::wstring& strImagePath )
 
 void imageDirExplorer::SavedList_add()
 {
+	image_p_old= image_p;
 	if( !mainConfig.cfg_content.saveLastImages ) return;
-	if( image_p &&  lastItemName!= image_p->getPathName(false) )
+	if( image_p && lastItemName!= image_p->getPathName(false) ){	//we dont want the same image twice in the done list
 		writeUtfLine( image_p->getPathName(false), "BGchanger_List.cfg" );
+	}
 }
 size_t imageDirExplorer::writeUtfLine( const std::wstring& strWrite, const std::string& file_out, std::string modeOpenOveride, bool quickDiscard )
 {
