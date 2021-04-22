@@ -1,6 +1,9 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.2.3	2021.04.22
+	fix: /wpshow after temporarily changing WP and /reshow would break
+
 v1.8.2.2	2021.04.16
 	Config file now accepts:	"= true | = false" as input as well as "1/0"
 	new CMD arguments:

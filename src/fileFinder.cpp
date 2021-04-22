@@ -459,6 +459,10 @@ void imageDirExplorer::whatWPDisplayed()
 		tempStr+= L"Error img not found";
 	tempStr+= L"\n";
 
+	if(_PrevImage_stringPath!= _CurrImage_stringPath){	//if custom image displayed
+		tempStr+= L"override: "+ _CurrImage_stringPath+ L"\n";
+	}
+
 	return writeToMultiple( tempStr );
 }
 void imageDirExplorer::printExitMsg()
@@ -519,7 +523,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 	if(overide)	str_imgName= overide->getPathName(false);
 	else 		str_imgName+= image_p->getPathName(false);
 	wprintf( L" %s\n", str_imgName.c_str() );
-	_PrevImage_stringPath= _CurrImage_stringPath;
+
 
 	if( exists_Wfile( str_imgName.c_str() ) ){
 		std::wstring str_path;
@@ -527,7 +531,10 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			str_path+= cwd_my+ L"\\";
 		}
 		if(overide) _CurrImage_stringPath= str_imgName;
-		else		_CurrImage_stringPath= str_path+ str_imgName;
+		else {
+					_CurrImage_stringPath= str_path+ str_imgName;
+					_PrevImage_stringPath= _CurrImage_stringPath;
+		}
 		if( stringEnds(str_imgName, mainConfig.cfg_content._ImageExtProblematic, true ) ){	//image is Problematic, convert
 			size_t posExtBeg= str_imgName.find_last_of( L'.' );
 			problematicFormat_ext= str_imgName.substr( posExtBeg );
@@ -614,8 +621,14 @@ void imageDirExplorer::reshowWP()
 		writeToMultiple( L"reshow! failed, image NOT found\n" );
 		return;
 	}
+	if( _PrevImage_stringPath.size() )
+		_CurrImage_stringPath= _PrevImage_stringPath;	//restore path so /wpshow will work
 
-	std::wstring temp_errMsg= L"ReShowing current Wallpaper image\n";
+	std::wstring temp_errMsg= L"ReShowing current Wallpaper image";
+	if(image_p)
+		temp_errMsg+= L"\n RP: "+ image_p->getPathName();	//get image name to display
+	temp_errMsg+= L"\n";
+
 	writeToMultiple(temp_errMsg);
 
 	SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (void *)_CurrRegImage.c_str() , SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
