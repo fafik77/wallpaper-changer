@@ -1,6 +1,9 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.2.4	2021.05.29
+	fix: /wprev should work now
+
 v1.8.2.3	2021.04.22
 	fix: /wpshow after temporarily changing WP and /reshow would break
 

@@ -177,6 +177,7 @@ class imageDirExplorer{
  	std::wstring cwd_my;
 		///stores the path to current image
  	std::wstring _CurrImage_stringPath;
+ 	std::wstring _CurrImage_stringPath_notOverriden;
 		///stores the path to old image
 	std::wstring _PrevImage_stringPath;
 		///stores the path to current imageFile that is shown

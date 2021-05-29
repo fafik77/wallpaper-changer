@@ -459,7 +459,7 @@ void imageDirExplorer::whatWPDisplayed()
 		tempStr+= L"Error img not found";
 	tempStr+= L"\n";
 
-	if(_PrevImage_stringPath!= _CurrImage_stringPath){	//if custom image displayed
+	if(_CurrImage_stringPath_notOverriden!= _CurrImage_stringPath){	//if custom image displayed
 		tempStr+= L"override: "+ _CurrImage_stringPath+ L"\n";
 	}
 
@@ -532,24 +532,40 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 		}
 		if(overide) _CurrImage_stringPath= str_imgName;
 		else {
-					_CurrImage_stringPath= str_path+ str_imgName;
-					_PrevImage_stringPath= _CurrImage_stringPath;
+			_PrevImage_stringPath= _CurrImage_stringPath;
+			_CurrImage_stringPath= str_path+ str_imgName;
+			_CurrImage_stringPath_notOverriden= _CurrImage_stringPath;
 		}
 		if( stringEnds(str_imgName, mainConfig.cfg_content._ImageExtProblematic, true ) ){	//image is Problematic, convert
 			size_t posExtBeg= str_imgName.find_last_of( L'.' );
 			problematicFormat_ext= str_imgName.substr( posExtBeg );
 
+			if(overide){
+				str_path+= L"_";
+			}
 			str_path+= L".JPG";		//delete temp conversion files
 			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
 			DeleteFileW( problematicFormat_ext.c_str() );
-			SetFileAttributesW( L".JPG", 0 );
-			DeleteFileW( L".JPG" );
+
+
 			Sleep(5);	//give NTFS some time to index that such file no longer exists
 
 			CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), false );	//fusking winApi never shows what arguments do
 			std::wstring temp_exe_exe( _OwnPath );
 			 temp_exe_exe+= _ImageConverter_exe;
-			std::wstring temp_argStr( problematicFormat_ext+ L" .JPG " );
+			std::wstring temp_argStr( problematicFormat_ext );
+			std::wstring convertedName;
+			 if(overide){
+			  temp_argStr+= L" _.JPG ";
+			  convertedName= L"_.JPG";
+			  SetFileAttributesW( convertedName.c_str(), 0 );
+			  DeleteFileW( convertedName.c_str() );
+			 } else {
+			  temp_argStr+= L" .JPG ";
+			  convertedName= L".JPG";
+			  SetFileAttributesW( convertedName.c_str(), 0 );
+			  DeleteFileW( convertedName.c_str() );
+			 }
 			 temp_argStr+= _ImageConverter_args+ L" ";
 			 temp_argStr+= std::wstring( mainConfig.cfg_content.BG_Colour_RGB.begin(), mainConfig.cfg_content.BG_Colour_RGB.end() );
 
@@ -564,7 +580,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			);
 			int waitedFor= 0;
 			while( waitedFor< 15 ){
-				if( exists_Wfile( L".JPG" ) ) break;
+				if( exists_Wfile( convertedName.c_str() ) ) break;
 				Sleep(100); ++waitedFor;
 			}
 printf("waitedFor = %i00 ms\n", waitedFor);
@@ -621,12 +637,13 @@ void imageDirExplorer::reshowWP()
 		writeToMultiple( L"reshow! failed, image NOT found\n" );
 		return;
 	}
-	if( _PrevImage_stringPath.size() )
-		_CurrImage_stringPath= _PrevImage_stringPath;	//restore path so /wpshow will work
+
+	_CurrImage_stringPath= _CurrImage_stringPath_notOverriden;	//restore path so /wpshow will work
 
 	std::wstring temp_errMsg= L"ReShowing current Wallpaper image";
-	if(image_p)
+	if(image_p){
 		temp_errMsg+= L"\n RP: "+ image_p->getPathName();	//get image name to display
+	}
 	temp_errMsg+= L"\n";
 
 	writeToMultiple(temp_errMsg);
