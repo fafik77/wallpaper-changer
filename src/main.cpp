@@ -28,9 +28,9 @@
 
 
 	///Version
-const char _Program_Version[]= "1.8.2.4";
+const char _Program_Version[]= "1.8.3";
 	///Version release Date
-const char _Program_VersionDate[]= "2021.05.29";
+const char _Program_VersionDate[]= "2021.12.06";
 	///github link to sources
 const char _Program_downloadSource[]= "https://github.com/fafik77";
 	///Google Drive download link

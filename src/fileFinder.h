@@ -25,6 +25,10 @@ struct DirFileEnt{
 		///return path+name
 	std::wstring getPathName(bool afterNumber=false)const;
 
+	size_t getNameStartPos()const {
+		if(path.size()) return path.size()+1;
+		return path.size();
+	}
 };
 
 	///vector(DirFileEnt)
@@ -66,14 +70,31 @@ struct timeToTime
 		sec= time_in;
 	}
 };
+struct NumberHex32{
+  //store
+	bool inValid= false;
+	unsigned char content[16]= {0};
+  //functions
+	bool operator < (const NumberHex32& other)const {return memcmp(this, &other, sizeof(NumberHex32) ) < 0;}
+	bool operator > (const NumberHex32& other)const {return memcmp(this, &other, sizeof(NumberHex32) ) > 0;}
+	bool operator == (const NumberHex32& other)const {return memcmp(this, &other, sizeof(NumberHex32) ) == 0;}
+
+	unsigned char* begin() {return content;}
+	const unsigned char* begin()const {return content;}
+	unsigned char* end() {return content+ 16;}
+	const unsigned char* end()const {return content+ 16;}
+};
 
 bool exists_file(const std::string& name);
 bool exists_Wfile(LPCWSTR szPath);
 
 
-bool isDigits( wchar_t char_1, wchar_t char_2 );
 	///@return char amount moved, -1 on error
 size_t getDigitsAsNumber( const std::wstring& string1, const std::wstring& string2, long long* out_LL );
+bool isFileNamedHex(const std::wstring& string1);
+NumberHex32 getFileNamedHex_numHex32(const std::wstring& string1);
+	///will return number 0-9A-Za-z, or -1(255) on fail
+unsigned char get_numHex_fromChar(const wchar_t& char1, bool &O_failed);
 bool compare_paths_bool(const DirFileEnt* DE_a, const DirFileEnt* DE_b );
 
 	///@return 0 no, 1 true

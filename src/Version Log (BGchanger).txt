@@ -1,6 +1,11 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.3	2021.12.06
+	fix: when option "sortDigitsAsNumbers" was enabled program would crash loop when number could not be compared
+	new: responding to above fix, added a comparison method for HexNumber Named Files (32 chars for FileName.extension) those files will be treated as full numbers and will be sorted first beffore file names only beggining with numbers
+	now: increased ConvertImage timeout by 1sec (from 1.5 -> 2.5 sec)
+
 v1.8.2.4	2021.05.29
 	fix: /wprev should work now
 

@@ -50,52 +50,143 @@ std::wstring DirFileEnt::getPathName(bool afterNumber)const
 }
 
 
-bool isDigits( wchar_t char_1 )
+inline bool isDigits( const wchar_t& char_1 )
 {
 	if( char_1 >= L'0' && char_1 <= L'9' ) return true;
 	return false;
 }
+size_t getDigitsCount(const std::wstring& string1, const std::wstring& string2)
+{
+	size_t foundDigits= 0;
+	size_t maxLenOf= string1.size();
+	if(string2.size() > maxLenOf) maxLenOf= string2.size();
+
+	for(size_t atPosCheck=0; atPosCheck!=maxLenOf; ++atPosCheck){ //iterate till closest end
+		if(isDigits(string1.at(atPosCheck)) && isDigits(string2.at(atPosCheck))){
+			++foundDigits; //add one as found
+		} else {
+			break;
+		}
+	}
+	return foundDigits;
+}
 size_t getDigitsAsNumber( const std::wstring& string1, const std::wstring& string2, long long* out_LL )
 {
+	size_t expectedDigitsCount= getDigitsCount(string1, string2);
   if(out_LL){
 	std::wistringstream sis1( string1 );
 	std::wistringstream sis2( string2 );
 	sis1>> out_LL[0];
 	sis2>> out_LL[1];
+	if( (sis1.fail() || sis2.fail()) && expectedDigitsCount )
+		return -1;
 	return sis1.tellg();
   }
 return -1;
+}
+bool isFileNamedHex(const std::wstring& string1)
+{
+	size_t filename= string1.size();
+	filename= string1.find_last_of(L"."); //we only want the Name without the extension
+
+	if(filename != 32) return false;
+	auto atPoseIter= string1.begin();
+	for(size_t atIter=0; atIter!=filename; ++atIter){
+		const wchar_t& atWC= *atPoseIter;
+		if( (atWC >= L'0' && atWC <= L'9') || (atWC >= L'A' && atWC <= L'Z') || (atWC >= L'a' && atWC <= L'z')){
+			//ok
+		} else {
+			return false;
+		}
+		++atPoseIter;
+	}
+	return true;
+}
+unsigned char get_numHex_fromChar(const wchar_t& char1, bool &O_failed)
+{
+	unsigned char numToRet= -1;
+
+	if( char1 >= L'0' && char1 <= L'9')
+		numToRet= char1- L'0';
+	if( char1 >= L'A' && char1 <= L'Z')
+		numToRet= (char1- L'A')+ 10;
+	if( char1 >= L'a' && char1 <= L'z')
+		numToRet= (char1- L'a')+ 10;
+	if(numToRet== (unsigned char)-1 )O_failed= true;
+	return numToRet;
+}
+NumberHex32 getFileNamedHex_numHex32(const std::wstring& string1)
+{
+	NumberHex32 retVal;
+	if(string1.size()<32){ retVal.inValid= true; return retVal;} //just a safety exit for when string is shorter then 32 chars
+
+	unsigned char* atPosIt= retVal.begin();
+	auto atPosChar= string1.begin();
+	for(; atPosIt!= retVal.end(); ++atPosIt){
+		(*atPosIt)= get_numHex_fromChar( *atPosChar, retVal.inValid) <<4; //move by 2^4 (=16)
+		atPosChar++;
+		(*atPosIt)|= get_numHex_fromChar( *atPosChar, retVal.inValid);
+		atPosChar++;
+	}
+	return retVal;
 }
 
 bool compare_paths_bool(const DirFileEnt* DE_a, const DirFileEnt* DE_b )
 {
 	std::wstring str_a, str_b;
+	size_t fileNameStartPos= 0;
 
 	if(publifiedConfig->DirSortByFileName){
 		str_a= DE_a->getName(0);
 		str_b= DE_b->getName(0);
+		fileNameStartPos= 0;
 	} else {
 		str_a= DE_a->getPathName(0);
 		str_b= DE_b->getPathName(0);
+		fileNameStartPos= DE_a->getNameStartPos();
 	}
 
 	size_t PosCurr= 0;
 	size_t maxLen= str_a.length();
+	wchar_t c_a, c_b = 0;
+
+	bool numberFailed= false;
 	if( str_b.length()< maxLen ) maxLen= str_b.length();
 
 	while( PosCurr< maxLen )
 	{
-		wchar_t c_a= std::toupper(str_a.at(PosCurr));
-		wchar_t c_b= std::toupper(str_b.at(PosCurr));
+		c_a= std::toupper(str_a.at(PosCurr));
+		c_b= std::toupper(str_b.at(PosCurr));
 
-		if( publifiedConfig->sortDigitsAsNumbers ){
+		if( publifiedConfig->sortDigitsAsNumbers && numberFailed==false ){
+		  if(PosCurr == fileNameStartPos){ //special case for handling names {[0-9a-z],32}.ext
+			if(maxLen>= 32){ //only if its at least 32 long does it make sense
+				bool res_a= false, res_b= false;
+				res_a= isFileNamedHex(DE_a->getName(0));
+				res_b= isFileNamedHex(DE_b->getName(0));
+				if(res_a && res_b){ //both are Hex numbered FileName
+					NumberHex32 res_numA, res_numB;
+					res_numA= getFileNamedHex_numHex32(DE_a->getName(0));
+					res_numB= getFileNamedHex_numHex32(DE_b->getName(0));
+					return res_numA< res_numB; //a< b
+				}
+				else if(res_a)
+					return true; //a < b
+				else if(res_b)
+					return false; //a !< b
+				//else //neither are Hex numbered FileName, continue as normal
+			}
+		  }
 		  BYTE isDigits_for= isDigits( c_a ) | (2*isDigits( c_b ));
 		  if( isDigits_for ){
 			if( isDigits_for == 3 ){
 				long long out_LL[2]= {0};
 				size_t moved= getDigitsAsNumber( str_a.substr(PosCurr), str_b.substr(PosCurr), out_LL );
-				bool change= out_LL[0] < out_LL[1];
-				if( out_LL[0] != out_LL[1] ) return change;	//return number if not same
+				if(moved== size_t(-1) ){
+					numberFailed= true; //we cant compare as number, do a string compare
+					continue;
+				}
+				if( out_LL[0] != out_LL[1] ) return (out_LL[0] < out_LL[1]);	//return number if not same
 
 				PosCurr+= moved;			//if same, skip number part
 				c_a= std::toupper(str_a.at(PosCurr));
@@ -579,12 +670,12 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 				0
 			);
 			int waitedFor= 0;
-			while( waitedFor< 15 ){
+			while( waitedFor!= 25 ){
 				if( exists_Wfile( convertedName.c_str() ) ) break;
 				Sleep(100); ++waitedFor;
 			}
 printf("waitedFor = %i00 ms\n", waitedFor);
-			if(waitedFor>= 15){
+			if(waitedFor>= 25){
 				std::wstring temp_errMsg( L"! Error ! could not convert image from " );
 				temp_errMsg+= problematicFormat_ext + L" to .jpeg\n";
 				writeToMultiple(temp_errMsg);
