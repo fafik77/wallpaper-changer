@@ -3,11 +3,11 @@
 
 
 #include <ctime>	// time
-
 #include <stdlib.h>	// qsort
-#include "configIO.h"
 #include <direct.h>	//cwd set, get
 #include <random>
+
+#include "configIO.h"
 
 
 	///contains path and fileName, with custom sort
@@ -167,6 +167,7 @@ class imageDirExplorer{
 		///specifies png to jpeg converter path
 	std::wstring _ImageConverter_exe;
 	std::wstring _ImageConverter_args;
+	 ///path to this.exe location (with bs)
 	std::wstring _OwnPath;
 
 		///@return 0 no error, 1 error

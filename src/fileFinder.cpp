@@ -616,97 +616,121 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 	wprintf( L" %s\n", str_imgName.c_str() );
 
 
-	if( exists_Wfile( str_imgName.c_str() ) ){
-		std::wstring str_path;
-		if( mainConfig.cfg_content.imageFolder.find(':')== str_path.npos ){
-			str_path+= cwd_my+ L"\\";
-		}
-		if(overide) _CurrImage_stringPath= str_imgName;
-		else {
-			_PrevImage_stringPath= _CurrImage_stringPath;
-			_CurrImage_stringPath= str_path+ str_imgName;
-			_CurrImage_stringPath_notOverriden= _CurrImage_stringPath;
-		}
-		if( stringEnds(str_imgName, mainConfig.cfg_content._ImageExtProblematic, true ) ){	//image is Problematic, convert
-			size_t posExtBeg= str_imgName.find_last_of( L'.' );
-			problematicFormat_ext= str_imgName.substr( posExtBeg );
-
-			if(overide){
-				str_path+= L"_";
-			}
-			str_path+= L".JPG";		//delete temp conversion files
-			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
-			DeleteFileW( problematicFormat_ext.c_str() );
-
-
-			Sleep(5);	//give NTFS some time to index that such file no longer exists
-
-			CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), false );	//fusking winApi never shows what arguments do
-			std::wstring temp_exe_exe( _OwnPath );
-			 temp_exe_exe+= _ImageConverter_exe;
-			std::wstring temp_argStr( problematicFormat_ext );
-			std::wstring convertedName;
-			 if(overide){
-			  temp_argStr+= L" _.JPG ";
-			  convertedName= L"_.JPG";
-			  SetFileAttributesW( convertedName.c_str(), 0 );
-			  DeleteFileW( convertedName.c_str() );
-			 } else {
-			  temp_argStr+= L" .JPG ";
-			  convertedName= L".JPG";
-			  SetFileAttributesW( convertedName.c_str(), 0 );
-			  DeleteFileW( convertedName.c_str() );
-			 }
-			 temp_argStr+= _ImageConverter_args+ L" ";
-			 temp_argStr+= std::wstring( mainConfig.cfg_content.BG_Colour_RGB.begin(), mainConfig.cfg_content.BG_Colour_RGB.end() );
-
-			wprintf( L" Converting \"%s\" to .jpeg\n", problematicFormat_ext.c_str() );
-			ShellExecuteW(
-				NULL,
-				L"open",
-				temp_exe_exe.c_str(),
-				temp_argStr.c_str(),
-				NULL,
-				0
-			);
-			int waitedFor= 0;
-			while( waitedFor!= 25 ){
-				if( exists_Wfile( convertedName.c_str() ) ) break;
-				Sleep(100); ++waitedFor;
-			}
-printf("waitedFor = %i00 ms\n", waitedFor);
-			if(waitedFor>= 25){
-				std::wstring temp_errMsg( L"! Error ! could not convert image from " );
-				temp_errMsg+= problematicFormat_ext + L" to .jpeg\n";
-				writeToMultiple(temp_errMsg);
-			}
-			SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
-			DeleteFileW( problematicFormat_ext.c_str() );
-			Sleep(5);	//give NTFS some time to index (again)
-		} else if(mainConfig.cfg_content.convertUTFNames && stringContainsUTFchars(str_imgName) ) {
-			size_t posExtBeg= str_imgName.find_last_of( L'.' );
-			if(overide) str_path+= L"_";
-			str_path+= str_imgName.substr( posExtBeg );
-			SetFileAttributesW( str_path.c_str(), 0 );
-			DeleteFileW(str_path.c_str());
-			CopyFileW( str_imgName.c_str(), str_path.c_str(), false );	//fusking winApi never shows what arguments do
-		} else {
-			if(overide)	str_path= str_imgName;
-			else		str_path+= str_imgName;	//image is ok = not .PNG
-		}
-		if(!overide) _CurrRegImage= str_path;
-
-		SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (void *)str_path.c_str() , SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
-			//new on 2020-02-16
-		SetWStringRegKeyValue( HKEY_CURRENT_USER, L"Control Panel\\Desktop", L"WallPaper", str_path );
-			//new on 2020-02-16
-		refreshDesktop();
-	} else {
+	if( !exists_Wfile( str_imgName.c_str() ) ){
 		printf("  Not Exists, rescan...\n");
 		prepStart();
 		return imageChange();
 	}
 
+	std::wstring str_path;
+	if( mainConfig.cfg_content.imageFolder.find(':')== str_path.npos ){
+		str_path+= cwd_my;
+		if(str_path.size() && str_path.back()!= '\\')
+			str_path+= L"\\";
+	}
+	if(overide)
+		_CurrImage_stringPath= str_imgName;
+	else {
+		_PrevImage_stringPath= _CurrImage_stringPath;
+		_CurrImage_stringPath= str_path+ str_imgName;
+		_CurrImage_stringPath_notOverriden= _CurrImage_stringPath;
+	}
+	if( stringEnds(str_imgName, mainConfig.cfg_content._ImageExtProblematic, true ) ){	//image is Problematic, convert
+		size_t posExtBeg= str_imgName.find_last_of( L'.' );
+		problematicFormat_ext= str_imgName.substr( posExtBeg );
+
+		if(overide){
+			str_path+= L"_";
+		}
+		str_path+= L".JPG";		//delete temp conversion files
+		SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
+		DeleteFileW( problematicFormat_ext.c_str() );
+
+
+		Sleep(5);	//give NTFS some time to index that such file no longer exists
+
+		CopyFileW( str_imgName.c_str(), problematicFormat_ext.c_str(), false );	//fusking winApi never shows what arguments do
+//			std::wstring temp_exe_exe( _OwnPath );
+//			 temp_exe_exe+= _ImageConverter_exe;
+		std::wstring temp_argStr( problematicFormat_ext );
+		std::wstring convertedName;
+		 if(overide){
+			temp_argStr+=  L" _.JPG ";
+			convertedName= L"_.JPG";
+		 }
+		 else {
+			temp_argStr+=  L" .JPG ";
+			convertedName= L".JPG";
+		 }
+		SetFileAttributesW( convertedName.c_str(), 0 );
+		DeleteFileW( convertedName.c_str() );
+		temp_argStr+= _ImageConverter_args+ L" ";
+		temp_argStr+= std::wstring( mainConfig.cfg_content.BG_Colour_RGB.begin(), mainConfig.cfg_content.BG_Colour_RGB.end() );
+
+		wprintf( L" Converting \"%s\" to .jpeg\n", problematicFormat_ext.c_str() );
+
+		PROCESS_INFORMATION processInfo;
+		STARTUPINFOW StartInfo;
+		ZeroMemory( &processInfo, sizeof(processInfo) );
+		ZeroMemory( &StartInfo, sizeof(StartInfo) );
+		StartInfo.cb= sizeof(StartInfo);
+
+		std::wstring wstr= L"\""+ _OwnPath+ _ImageConverter_exe+ L"\" "+ temp_argStr;
+
+	//[ 2024-02-18 new way of handling things
+		CreateProcessW(
+			NULL,
+			&wstr.at(0),
+			NULL,                   // Process handle not inheritable
+			NULL,                   // Thread handle not inheritable
+			FALSE,                  // Set handle inheritance to FALSE
+			NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE | CREATE_NEW_PROCESS_GROUP | CREATE_UNICODE_ENVIRONMENT, // creation flags
+			NULL,                   // Use parent's environment block
+			NULL,                   // Use parent's cwd starting directory
+			&StartInfo,
+			&processInfo
+		);
+		if(processInfo.hProcess== INVALID_HANDLE_VALUE){
+			writeToMultiple(L"Could not run ConvertImageG.exe");
+			return;
+		}
+		 //we can wait lets say 10sec for conversion to happen
+		DWORD waitRes= WaitForSingleObject(processInfo.hProcess, 10*1000); //wait for conversion 10sec
+		if(waitRes== WAIT_TIMEOUT){
+			std::wstring temp_errMsg( L"! Error ! Timeout: could not convert image from " );
+			temp_errMsg+= problematicFormat_ext + L" to .jpeg within 10sec\n";
+			writeToMultiple(temp_errMsg);
+		 //and if it doesn't kill it
+			TerminateProcess(processInfo.hProcess, ERROR_TIMEOUT); //the conversion takes too long
+			CloseHandle(processInfo.hProcess); //just becouse
+			return;
+		}
+		CloseHandle(processInfo.hProcess);
+	//] end 2024-02-18
+
+		SetFileAttributesW( problematicFormat_ext.c_str(), 0 );
+		DeleteFileW( problematicFormat_ext.c_str() );
+		Sleep(5);	//give NTFS some time to index (again)
+	}
+	else if(mainConfig.cfg_content.convertUTFNames && stringContainsUTFchars(str_imgName) ) {
+		size_t posExtBeg= str_imgName.find_last_of( L'.' );
+		if(overide) str_path+= L"_";
+		str_path+= str_imgName.substr( posExtBeg );
+		SetFileAttributesW( str_path.c_str(), 0 );
+		DeleteFileW(str_path.c_str());
+		CopyFileW( str_imgName.c_str(), str_path.c_str(), false );	//fusking winApi never shows what arguments do
+	}
+	else {
+		if(overide)	str_path= str_imgName;
+		else		str_path+= str_imgName;	//image is ok = not .PNG
+	}
+	if(!overide) _CurrRegImage= str_path;
+
+	SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (void *)str_path.c_str() , SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
+		//new on 2020-02-16
+	SetWStringRegKeyValue( HKEY_CURRENT_USER, L"Control Panel\\Desktop", L"WallPaper", str_path );
+		//new on 2020-02-16
+	refreshDesktop();
 }
 bool imageDirExplorer::stringContainsUTFchars(const std::wstring& wstrIn)
 {

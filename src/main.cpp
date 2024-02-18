@@ -23,16 +23,16 @@
 #endif
 
 //#include <tchar.h>
-#include "fileFinder.h"
 #include <windows.h>
+#include "fileFinder.h"
 
 
 	///Version
-const char _Program_Version[]= "1.8.3";
+const char _Program_Version[]= "1.8.4";
 	///Version release Date
-const char _Program_VersionDate[]= "2021.12.06";
+const char _Program_VersionDate[]= "2024.02.18";
 	///github link to sources
-const char _Program_downloadSource[]= "https://github.com/fafik77";
+const char _Program_downloadSource[]= "https://github.com/fafik77/wallpaper-changer";
 	///Google Drive download link
 const char _Program_downloadExe[]= "https://drive.google.com/file/d/1-LBV6kRbCCtDYmLDh47I9CNFP_7onoWf/view";
 
@@ -166,7 +166,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 	}
 	useCmdArgs( argCount, szArgList, false, true );
 
-	images->_ImageConverter_exe=  L"ConvertImage.exe";
+	images->_ImageConverter_exe=  L"ConvertImageG.exe";
 	images->_ImageConverter_args= L"90";
 	vectorString& fastPush= images->mainConfig.cfg_content._ImageExtProblematic;
 	if( fastPush.empty() ){
