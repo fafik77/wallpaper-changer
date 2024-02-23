@@ -28,9 +28,9 @@
 
 
 	///Version
-const char _Program_Version[]= "1.8.4";
+const char _Program_Version[]= "1.8.5";
 	///Version release Date
-const char _Program_VersionDate[]= "2024.02.18";
+const char _Program_VersionDate[]= "2024.02.23";
 	///github link to sources
 const char _Program_downloadSource[]= "https://github.com/fafik77/wallpaper-changer";
 	///Google Drive download link

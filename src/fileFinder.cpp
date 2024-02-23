@@ -623,7 +623,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 	}
 
 	std::wstring str_path;
-	if( mainConfig.cfg_content.imageFolder.find(':')== str_path.npos ){
+	if( mainConfig.cfg_content.imageFolder.find(':')== str_path.npos ){	//is a relative path
 		str_path+= cwd_my;
 		if(str_path.size() && str_path.back()!= '\\')
 			str_path+= L"\\";
@@ -638,6 +638,10 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 	if( stringEnds(str_imgName, mainConfig.cfg_content._ImageExtProblematic, true ) ){	//image is Problematic, convert
 		size_t posExtBeg= str_imgName.find_last_of( L'.' );
 		problematicFormat_ext= str_imgName.substr( posExtBeg );
+	  //path str is empty we need to specify where it is located for win api
+		str_path+= cwd_my;
+		if(str_path.size() && str_path.back()!= '\\')
+			str_path+= L"\\";
 
 		if(overide){
 			str_path+= L"_";
@@ -684,7 +688,7 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 			NULL,                   // Process handle not inheritable
 			NULL,                   // Thread handle not inheritable
 			FALSE,                  // Set handle inheritance to FALSE
-			NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE | CREATE_NEW_PROCESS_GROUP | CREATE_UNICODE_ENVIRONMENT, // creation flags
+			NORMAL_PRIORITY_CLASS /*| CREATE_NEW_CONSOLE*/ | CREATE_NEW_PROCESS_GROUP /*| CREATE_UNICODE_ENVIRONMENT*/, // creation flags
 			NULL,                   // Use parent's environment block
 			NULL,                   // Use parent's cwd starting directory
 			&StartInfo,
@@ -713,11 +717,16 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 		Sleep(5);	//give NTFS some time to index (again)
 	}
 	else if(mainConfig.cfg_content.convertUTFNames && stringContainsUTFchars(str_imgName) ) {
-		size_t posExtBeg= str_imgName.find_last_of( L'.' );
+		const size_t posExtBeg= str_imgName.find_last_of( L'.' );
+	  //path str is empty we need to specify where it is located for win api
+		str_path+= cwd_my;
+		if(str_path.size() && str_path.back()!= '\\')
+			str_path+= L"\\";
+
 		if(overide) str_path+= L"_";
 		str_path+= str_imgName.substr( posExtBeg );
-		SetFileAttributesW( str_path.c_str(), 0 );
-		DeleteFileW(str_path.c_str());
+		SetFileAttributesW( str_path.c_str(), 0 );	//make sure to unlock for deletion
+		DeleteFileW(str_path.c_str());				//delete file
 		CopyFileW( str_imgName.c_str(), str_path.c_str(), false );	//fusking winApi never shows what arguments do
 	}
 	else {

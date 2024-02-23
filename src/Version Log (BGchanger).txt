@@ -1,6 +1,9 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.5	2024.02.23 bugfix for abs path
+	converting | copy of UTF-8 fileName would not render BG image if provided path was absolute (C:\path to images\img)
+
 v1.8.4	2024.02.18 new ConvertImage
 	updated to use new ConvertImage
 	updated code to work better with ConvertImage (hopefully)
