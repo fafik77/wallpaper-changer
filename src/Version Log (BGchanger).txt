@@ -1,6 +1,12 @@
 BGchanger changes Desktop Wallpaper using various formats(even those that Windows cant handle)
 
 
+v1.8.6	2024.02.27 bugfix for cwd path, +option, new compiler x64
+	converting | copy of UTF-8 fileName would set the wrong image path not displaying it (C:\img\C:\bgchanger path\.jpg)
+	changed to new compiler (gcc from CB::20) (reduced exe size from 700KB to 200KB +.dll)
+	new config option:
+		+JPEG_Quality= 10-100 def: 93
+
 v1.8.5	2024.02.23 bugfix for abs path
 	converting | copy of UTF-8 fileName would not render BG image if provided path was absolute (C:\path to images\img)
 

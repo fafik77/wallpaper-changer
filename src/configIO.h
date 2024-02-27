@@ -44,6 +44,7 @@ struct configFileContent{
 	BYTE skipHiddenFolders= 1;
 	vectorString imageExt;
 	vectorString _ImageExtProblematic;
+	BYTE JPEG_Quality= 93;
 	BYTE convertUTFNames= false;
 
 	bool forcedImageChoosing= false;

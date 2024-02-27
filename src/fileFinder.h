@@ -2,6 +2,7 @@
 #define FILEFINDER_H
 
 
+#include <iostream>
 #include <ctime>	// time
 #include <stdlib.h>	// qsort
 #include <direct.h>	//cwd set, get

@@ -23,14 +23,15 @@
 #endif
 
 //#include <tchar.h>
+#include <string>
 #include <windows.h>
 #include "fileFinder.h"
 
 
 	///Version
-const char _Program_Version[]= "1.8.5";
+const char _Program_Version[]= "1.8.6";
 	///Version release Date
-const char _Program_VersionDate[]= "2024.02.23";
+const char _Program_VersionDate[]= "2024.02.27";
 	///github link to sources
 const char _Program_downloadSource[]= "https://github.com/fafik77/wallpaper-changer";
 	///Google Drive download link
@@ -182,6 +183,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 		remove( images->ArgsConfig.showLogTo.c_str() );
 		images->writeTime(images->ArgsConfig.showLogTo);	//write date time
 	}
+	images->_ImageConverter_args= std::to_wstring(images->mainConfig.cfg_content.JPEG_Quality);
 
 	images->prepStart();
 	images->imageChange();

@@ -363,7 +363,7 @@ bool configFile::Open(const std::string& file)
 		while( cfgFstr.readLine(line) ){
 			vectorString str_out;
 			if( stringLineSeparate2(line, str_out) ){
-				size_t temp_st= 0;
+				int temp_st= 0;
 				if( str_out.at(0) == "random" ){
 					std::istringstream temp_sis(str_out.at(1));
 					temp_sis>> temp_st;
@@ -383,7 +383,15 @@ bool configFile::Open(const std::string& file)
 					stringLineSeparate2(str_out.at(1), cfg_content.imageExt, " ", true);
 				} else if( str_out.at(0) == "convertExt" ){
 					stringLineSeparate2(str_out.at(1),  cfg_content._ImageExtProblematic, " ", true);
-				} else if( str_out.at(0) == "convertUTFNames" ){
+				} else if( str_out.at(0) == "JPEG_Quality" ){	//2024-02-27
+					std::istringstream temp_sis(str_out.at(1));
+					temp_sis>> temp_st;
+					if(temp_st){
+						cfg_content.JPEG_Quality= std::max(10, std::min(temp_st, 100));
+printf("JPEG_Quality= %u\n", cfg_content.JPEG_Quality);
+					}
+				}
+				else if( str_out.at(0) == "convertUTFNames" ){
 					cfg_content.convertUTFNames= getBoolFromValue(str_out.at(1));
 				} else if( str_out.at(0) == "skipFoldersBeginning" ){
 					cfg_content.skipFoldersBeginning= str_out.at(1);
@@ -445,12 +453,13 @@ bool configFile::Open(const std::string& file)
 			}
 		}
 		cfgFstr.Close();
-	} else {
+	}
+	else {
 		return GenerateNew(file);
 	}
 		//correct values
 	if( cfg_content.useSystemTime && cfg_content.time%60 ){	//not supported
-		printf("!!! config.time= %u does not work together with `config.useSystemTime` Please use n*60. !`config.useSystemTime` set to 0!\n", cfg_content.time);
+		printf("!!! config.time= %u does not work together with `config.useSystemTime` Please use n*60. !`config.useSystemTime` set to 0!\n", (unsigned int)cfg_content.time);
 		cfg_content.useSystemTime= false;
 	}
 	if(cfg_content.skipFoldersEnding.empty()) cfg_content.skipFoldersEnding= "/";
@@ -479,6 +488,8 @@ imageFolder=pic\n\
 imageExt=.png .jpg .jpeg\n\
  @converts image to jpeg before showing it\n\
 convertExt=.png .tif .tiff .webp\n\
+ @determines converted images Quality (10-100 % def: 93)\n\
+JPEG_Quality=93\n\
  @copies UTF named image into ANSII named image before showing it(some windows desktops might not like UTF chars in image path)\n\
 convertUTFNames=0\n\
  @to skip ALL folders leave empty, to skip NOTHING use '/'\n\

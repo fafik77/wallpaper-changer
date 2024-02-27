@@ -613,7 +613,8 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 	if(str_imgName.back()!= L'\\') str_imgName+= L"\\";
 	if(overide)	str_imgName= overide->getPathName(false);
 	else 		str_imgName+= image_p->getPathName(false);
-	wprintf( L" %s\n", str_imgName.c_str() );
+//	wprintf( L" %s\n", str_imgName.c_str() );
+	std::wcout<< " "<< str_imgName.c_str() << std::endl;
 
 
 	if( !exists_Wfile( str_imgName.c_str() ) ){
@@ -635,11 +636,13 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 		_CurrImage_stringPath= str_path+ str_imgName;
 		_CurrImage_stringPath_notOverriden= _CurrImage_stringPath;
 	}
+std::wcout<< "str_path= "<< str_path<< "\n";
+
 	if( stringEnds(str_imgName, mainConfig.cfg_content._ImageExtProblematic, true ) ){	//image is Problematic, convert
 		size_t posExtBeg= str_imgName.find_last_of( L'.' );
 		problematicFormat_ext= str_imgName.substr( posExtBeg );
 	  //path str is empty we need to specify where it is located for win api
-		str_path+= cwd_my;
+		if(!str_path.size()) str_path+= cwd_my;
 		if(str_path.size() && str_path.back()!= '\\')
 			str_path+= L"\\";
 
@@ -671,7 +674,8 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 		temp_argStr+= _ImageConverter_args+ L" ";
 		temp_argStr+= std::wstring( mainConfig.cfg_content.BG_Colour_RGB.begin(), mainConfig.cfg_content.BG_Colour_RGB.end() );
 
-		wprintf( L" Converting \"%s\" to .jpeg\n", problematicFormat_ext.c_str() );
+//		wprintf( L" Converting \"%s\" to .jpeg\n", problematicFormat_ext.data() );
+		std::wcout<< " Converting \"" << problematicFormat_ext<< "\" to .jpeg"<< std::endl;
 
 		PROCESS_INFORMATION processInfo;
 		STARTUPINFOW StartInfo;
@@ -716,10 +720,10 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 		DeleteFileW( problematicFormat_ext.c_str() );
 		Sleep(5);	//give NTFS some time to index (again)
 	}
-	else if(mainConfig.cfg_content.convertUTFNames && stringContainsUTFchars(str_imgName) ) {
+	else if(mainConfig.cfg_content.convertUTFNames && stringContainsUTFchars(str_imgName) ) { //image contains UTF-8 chats, copy
 		const size_t posExtBeg= str_imgName.find_last_of( L'.' );
 	  //path str is empty we need to specify where it is located for win api
-		str_path+= cwd_my;
+		if(!str_path.size()) str_path+= cwd_my;
 		if(str_path.size() && str_path.back()!= '\\')
 			str_path+= L"\\";
 
@@ -729,11 +733,13 @@ void imageDirExplorer::imageChange(DirFileEnt* overide)
 		DeleteFileW(str_path.c_str());				//delete file
 		CopyFileW( str_imgName.c_str(), str_path.c_str(), false );	//fusking winApi never shows what arguments do
 	}
-	else {
+	else {	//image is ok = not .PNG
 		if(overide)	str_path= str_imgName;
-		else		str_path+= str_imgName;	//image is ok = not .PNG
+		else		str_path+= str_imgName;
 	}
 	if(!overide) _CurrRegImage= str_path;
+std::wcout<< "str_path= "<< str_path<< "\n";
+std::wcout<< "str_imgName= "<< str_imgName<< "\n";
 
 	SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (void *)str_path.c_str() , SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE);
 		//new on 2020-02-16
@@ -939,7 +945,8 @@ return retVal;
 void imageDirExplorer::writeToMultiple(const std::wstring& strWrite, writeToMultiple_enum writeToWhere)
 {
 	if(writeToWhere & writeTo_console){
-		wprintf( L"%s", strWrite.c_str() );
+//		wprintf( L"%s", strWrite.c_str() );
+		std::wcout<< strWrite;
 		if(ArgsConfig.hOutPipedToFile){
 			DWORD bytesToWrite= strWrite.size()*sizeof(wchar_t);
 			DWORD bytesWritten;
