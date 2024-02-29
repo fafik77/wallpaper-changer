@@ -29,9 +29,9 @@
 
 
 	///Version
-const char _Program_Version[]= "1.8.6";
+const char _Program_Version[]= "1.8.7";
 	///Version release Date
-const char _Program_VersionDate[]= "2024.02.27";
+const char _Program_VersionDate[]= "2024.02.29";
 	///github link to sources
 const char _Program_downloadSource[]= "https://github.com/fafik77/wallpaper-changer";
 	///Google Drive download link
@@ -70,13 +70,14 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 	GetVersionEx(&osVerInfo);
 
 
-
+ //only one instance
 	try{
 			// Try to open the mutex.
 		hMutex= OpenMutex( MUTEX_ALL_ACCESS, 0, szClassName );
 		if( !hMutex ){	//run program
 			hMutex= CreateMutex(0, 0, szClassName );
-		} else {		//call 1st instance
+		} else
+		{		//call 1st instance
 			HWND main_window_handle= FindWindow( 0, my_window_title );
 				//try to make an output file
 			std::wstring pathFileCOut_str(512, char(0));
@@ -134,7 +135,7 @@ int WINAPI WinMain(HINSTANCE hThisInstance,
 						if(readAmount){
 							wBuff[ readAmount ]= 0;
 							wBuff[ readAmount+1 ]= 0;
-							wprintf(L"%s", (wchar_t*)wBuff);
+							wprintf(L"%ls", (wchar_t*)wBuff);
 						}
 					}while(readAmount);
 					CloseHandle(hOutFile);
